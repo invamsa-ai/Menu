@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - MenuNow Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+    <script src="../js/firebase-config.js"></script> 
+
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c33 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .form-control {
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            margin-bottom: 1rem;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-logo">MenuNow</div>
+        <h2 style="margin-bottom: 2rem; color: #555;">لوحة تحكم المطعم</h2>
+        
+        <form id="loginForm">
+            <div class="form-group" style="text-align: right;">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="email" class="form-control" placeholder="example@menu.com" required>
+            </div>
+            <div class="form-group" style="text-align: right;">
+                <label>كلمة المرور</label>
+                <input type="password" id="password" class="form-control" placeholder="أدخل كلمة المرور" required>
+            </div>
+            <button type="submit" class="btn btn-primary login-btn">دخول</button>
+        </form>
+        
+        <p style="margin-top: 1.5rem; color: #888; font-size: 0.9rem;">
+            نسيت كلمة المرور؟ تواصل مع الدعم الفني
+        </p>
+    </div>
+
+    <script>
+        // التحقق مما إذا كان المستخدم مسجلاً بالفعل للدخول مباشرة
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // إذا كان مسجلاً، اذهب للصفحة الرئيسية فوراً
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.querySelector('.login-btn');
+
+            // تغيير نص الزر ليعرف المستخدم أن العملية جارية
+            btn.innerText = "جاري التحقق...";
+            btn.disabled = true;
+            
+            // تسجيل الدخول الحقيقي عبر فايربيس
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    // نجاح الدخول
+                    console.log("تم تسجيل الدخول:", userCredential.user);
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    // فشل الدخول
+                    btn.innerText = "دخول";
+                    btn.disabled = false;
+                    
+                    let errorMsg = "حدث خطأ في تسجيل الدخول";
+                    if(error.code === 'auth/invalid-email') errorMsg = "البريد الإلكتروني غير صحيح";
+                    if(error.code === 'auth/user-not-found') errorMsg = "المستخدم غير موجود";
+                    if(error.code === 'auth/wrong-password') errorMsg = "كلمة المرور خاطئة";
+                    if(error.code === 'auth/invalid-credential') errorMsg = "البيانات غير صحيحة";
+
+                    alert(errorMsg);
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>

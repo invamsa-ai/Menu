@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuNow - المنيو الإلكتروني</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+<script src="js/firebase-config.js"></script> <script src="js/app.js"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">MenuNow</div>
+        <div id="restaurantStatus" class="status-badge status-open">مفتوح الآن</div>
+    </header>
+
+    <!-- Hero Section -->
+    <div style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&q=80'); background-size: cover; background-position: center; height: 200px; display: flex; align-items: center; justify-content: center; color: white; text-align: center; margin-bottom: 1rem;">
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">أهلاً بكم في MenuNow</h1>
+            <p>استمتع بأشهى المأكولات والحلويات</p>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="categories-container" id="categoriesContainer">
+        <!-- سيتم ملؤها بواسطة JS -->
+    </div>
+
+    <!-- Search Bar -->
+    <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
+        <input type="text" id="searchInput" placeholder="ابحث عن طبقك المفضل..." style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid #ddd; outline: none;">
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid" id="productsGrid">
+        <!-- سيتم ملؤها بواسطة JS -->
+    </div>
+
+    <!-- Cart Button -->
+    <div class="cart-btn" id="cartBtn" onclick="toggleCart()">
+        <i class="fas fa-shopping-basket" style="font-size: 1.5rem;"></i>
+        <div class="cart-count" id="cartCount">0</div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <h2 style="color: var(--primary-color);">سلة التسوق</h2>
+            <i class="fas fa-times" onclick="toggleCart()" style="cursor: pointer; font-size: 1.5rem;"></i>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- سيتم ملؤها بواسطة JS -->
+        </div>
+        <div class="cart-footer">
+            <div class="total-price">
+                <span>المجموع:</span>
+                <span id="totalPrice">0 ر.س</span>
+            </div>
+            <button class="checkout-btn" onclick="sendOrder()">
+                <i class="fab fa-whatsapp"></i>
+                إرسال الطلب عبر واتساب
+            </button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // إضافة وظيفة البحث
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = restaurantData.products.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.category.toLowerCase().includes(term)
+            );
+            renderProducts(filtered);
+        });
+    </script>
+</body>
+</html>

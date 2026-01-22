@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم MenuNow - إدارة المطعم</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+    <script src="../js/firebase-config.js"></script>
+    <style>
+        body { background-color: #f0f2f5; }
+        .admin-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 2rem 1rem; }
+        .main-content { flex: 1; padding: 2rem; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 1rem; color: #555; text-decoration: none; border-radius: 10px; margin-bottom: 0.5rem; transition: 0.3s; cursor: pointer;}
+        .nav-link:hover, .nav-link.active { background: var(--primary-color); color: #fff; }
+        .stat-card { background: #fff; padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 20px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(255, 107, 0, 0.1); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+        th, td { padding: 1rem; text-align: right; border-bottom: 1px solid #eee; }
+        th { background: #fafafa; color: #777; }
+        
+        /* شاشة التحميل */
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .admin-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; padding: 1rem; display: flex; overflow-x: auto; }
+            .nav-link { white-space: nowrap; padding: 0.5rem 1rem; }
+            .main-content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <i class="fas fa-spinner fa-spin"></i> &nbsp; جاري الاتصال بقاعدة البيانات...
+    </div>
+
+    <div class="admin-wrapper">
+        <div class="sidebar">
+            <div class="logo" style="margin-bottom: 2rem; text-align: center;">MenuNow Admin</div>
+            <a class="nav-link active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-line"></i> الإحصائيات</a>
+            <a class="nav-link" onclick="showSection('products', this)"><i class="fas fa-utensils"></i> المنتجات</a>
+            <a class="nav-link" onclick="showSection('categories', this)"><i class="fas fa-list"></i> الأقسام</a>
+            <a class="nav-link" onclick="showSection('settings', this)"><i class="fas fa-cog"></i> الإعدادات</a>
+            
+            <div style="margin-top: auto;">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%; margin-top: 10px;">تسجيل خروج</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="dashboard" class="admin-section active">
+                <h2 style="margin-bottom: 2rem;">لوحة التحكم العامة</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-box"></i></div>
+                        <div><div style="color: #888; font-size: 0.9rem;">إجمالي المنتجات</div><div id="totalProductsCount" style="font-size: 1.5rem; font-weight: bold;">0</div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-tags"></i></div>
+                        <div><div style="color: #888; font-size: 0.9rem;">إجمالي الأقسام</div><div id="totalCategoriesCount" style="font-size: 1.5rem; font-weight: bold;">0</div></div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <h3>رابط المنيو و QR Code</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">هذا هو الرابط الخاص بمطعمك، سيظهر فيه منتجاتك فقط.</p>
+                    <button class="btn btn-primary" onclick="generateQR()">عرض الرابط</button>
+                    <div id="qrContainer" style="margin-top: 1.5rem;"></div>
+                </div>
+            </div>
+
+            <div id="products" class="admin-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>إدارة المنتجات</h2>
+                    <button class="btn btn-primary" onclick="document.getElementById('addProductModal').style.display='flex'">+ إضافة منتج</button>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الصورة</th>
+                                <th>الاسم</th>
+                                <th>القسم</th>
+                                <th>السعر</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductsTable">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="categories" class="admin-section">
+                <h2>إدارة الأقسام</h2>
+                <div class="admin-card" style="max-width: 500px;">
+                    <div class="form-group">
+                        <label>إضافة قسم جديد</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="newCatName" class="form-control" placeholder="اسم القسم...">
+                            <button class="btn btn-primary" onclick="addCategory()">إضافة</button>
+                        </div>
+                    </div>
+                    <div id="adminCategoriesList">
+                        </div>
+                </div>
+            </div>
+
+            <div id="settings" class="admin-section">
+                <h2>إعدادات المطعم</h2>
+                <div class="admin-card" style="max-width: 600px;">
+                    <div class="form-group">
+                        <label>اسم المطعم</label>
+                        <input type="text" id="restName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الواتساب (مثال: 966500000000)</label>
+                        <input type="text" id="restWhatsapp" class="form-control" placeholder="966...">
+                    </div>
+                    <div class="form-group">
+                        <label>العملة</label>
+                        <input type="text" id="restCurrency" class="form-control" placeholder="ر.س">
+                    </div>
+                    <div class="form-group">
+                        <label>حالة المطعم</label>
+                        <select id="restStatus" class="form-control">
+                            <option value="open">مفتوح</option>
+                            <option value="closed">مغلق</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">حفظ التغييرات</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="addProductModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div class="admin-card" style="width:90%; max-width:500px; margin: 5% auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
+                <h3>إضافة منتج جديد</h3>
+                <span onclick="document.getElementById('addProductModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
+            
+            <form onsubmit="addProduct(event)">
+                <div class="form-group">
+                    <label>اسم المنتج</label>
+                    <input type="text" id="pName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>السعر</label>
+                    <input type="number" id="pPrice" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>القسم</label>
+                    <select id="pCategory" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                   <label>رابط الصورة (اختياري)</label>
+                   <input type="text" id="pImage" class="form-control" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">حفظ المنتج</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    
+    <script>
+        // دالة التنقل بين التبويبات
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            element.classList.add('active');
+        }
+    </script>
+</body>
+</html>
