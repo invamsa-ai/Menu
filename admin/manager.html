@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Control - الإدارة العليا</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script src="../js/firebase-config.js"></script>
+
+    <style>
+        body { background: #222; color: #eee; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+            border-left: 5px solid #ff4757;
+        }
+        
+        .card { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #444; }
+        th { color: #aaa; font-size: 0.9rem; }
+        tr:hover { background: #3a3a3a; }
+        
+        .btn {
+            padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer;
+            font-family: 'Cairo', sans-serif; font-weight: bold; transition: 0.2s;
+        }
+        .btn-create { background: #2ed573; color: #fff; width: 100%; padding: 12px; font-size: 1.1rem; }
+        .btn-delete { background: #ff4757; color: white; }
+        .btn-reset { background: #ffa502; color: white; }
+        
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-left: 5px; }
+        .open { background: #2ed573; }
+        .closed { background: #ff4757; }
+
+        /* نموذج الإضافة */
+        .add-box {
+            background: #2f3542; padding: 20px; border-radius: 10px; border: 1px solid #444;
+            display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
+        }
+        input {
+            background: #444; border: 1px solid #555; color: white; padding: 10px;
+            border-radius: 5px; font-family: 'Cairo'; width: 100%; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2 style="margin:0;">Master Control ⚡</h2>
+                <small style="color:#aaa;">الإدارة المباشرة للحسابات</small>
+            </div>
+            <div id="connectionStatus" style="color: #2ed573;">
+                <i class="fas fa-wifi"></i> متصل كمسؤول
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-user-plus"></i> إنشاء مطعم جديد فوراً</h3>
+            <div class="add-box">
+                <div>
+                    <label style="display:block; margin-bottom:5px;">البريد الإلكتروني</label>
+                    <input type="email" id="newEmail" placeholder="user@restaurant.com">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px;">كلمة المرور</label>
+                    <input type="text" id="newPass" placeholder="******">
+                </div>
+                <button onclick="createAccount()" class="btn btn-create">
+                    <i class="fas fa-bolt"></i> إنشاء
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-users"></i> المطاعم الحالية (<span id="count">0</span>)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>المطعم</th>
+                        <th>الحالة</th>
+                        <th>إجراءات الحساب</th>
+                    </tr>
+                </thead>
+                <tbody id="restList">
+                    <tr><td colspan="3" style="text-align:center">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. الدخول التلقائي السري (AUTO LOGIN)
+        // ==========================================
+        // ⚠️ استبدل البيانات هنا ببيانات حسابك الأدمن الحقيقي ⚠️
+        const ADMIN_EMAIL = "admin@admin.com"; 
+        const ADMIN_PASS = "123456"; 
+
+        // تسجيل الدخول فور فتح الصفحة
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                console.log("جاري الدخول التلقائي...");
+                auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS)
+                    .catch(err => alert("فشل الدخول التلقائي: تأكد من الإيميل والباسوورد في الكود"));
+            } else {
+                loadRestaurants();
+            }
+        });
+
+        // ==========================================
+        // 2. إنشاء حساب جديد (دون الخروج من حسابك)
+        // ==========================================
+        async function createAccount() {
+            const email = document.getElementById('newEmail').value;
+            const pass = document.getElementById('newPass').value;
+            const btn = document.querySelector('.btn-create');
+
+            if(!email || !pass) return alert("أدخل البيانات!");
+
+            btn.innerText = "جاري الإنشاء...";
+            
+            try {
+                // الحيلة الذكية: ننشئ "تطبيق ثانوي" لإنشاء المستخدم دون التأثير على جلسة الأدمن
+                const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+                const secondaryAuth = secondaryApp.auth();
+
+                // 1. إنشاء المستخدم في Authentication
+                const userCred = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
+                const uid = userCred.user.uid;
+
+                // 2. إنشاء بياناته في Firestore (باستخدام الصلاحيات الحالية للأدمن)
+                await db.collection('restaurants').doc(uid).set({
+                    owner_id: uid,
+                    email: email, // نحفظ الإيميل لنستخدمه لاحقاً في التعديل
+                    name: "مطعم جديد",
+                    status: "open",
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 3. تنظيف وحذف التطبيق الثانوي
+                secondaryAuth.signOut();
+                secondaryApp.delete();
+
+                alert(`✅ تم إنشاء الحساب بنجاح!\nEmail: ${email}\nPass: ${pass}`);
+                document.getElementById('newEmail').value = '';
+                document.getElementById('newPass').value = '';
+
+            } catch (err) {
+                alert("خطأ: " + err.message);
+                console.error(err);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-bolt"></i> إنشاء';
+            }
+        }
+
+        // ==========================================
+        // 3. عرض وإدارة الحسابات
+        // ==========================================
+        function loadRestaurants() {
+            db.collection('restaurants').onSnapshot(snapshot => {
+                const tbody = document.getElementById('restList');
+                document.getElementById('count').innerText = snapshot.size;
+                tbody.innerHTML = '';
+
+                snapshot.forEach(doc => {
+                    const r = doc.data();
+                    const statusClass = r.status === 'open' ? 'open' : 'closed';
+                    const email = r.email || "غير مسجل";
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <div style="font-weight:bold; font-size:1.1rem;">${r.name}</div>
+                                <div style="color:#888; font-size:0.8rem;">${email}</div>
+                                <div style="color:#555; font-size:0.7rem;">ID: ${doc.id}</div>
+                            </td>
+                            <td>
+                                <span class="status-dot ${statusClass}"></span> ${r.status === 'open' ? 'مفتوح' : 'مغلق'}
+                            </td>
+                            <td>
+                                <button class="btn btn-reset" onclick="resetPass('${email}')" title="تغيير كلمة المرور">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button class="btn btn-delete" onclick="nukeAccount('${doc.id}', '${r.name}')" title="حذف نهائي">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // ==========================================
+        // 4. تغيير كلمة المرور (Reset)
+        // ==========================================
+        async function resetPass(email) {
+            if(confirm(`هل تريد إرسال رابط تعيين كلمة مرور جديدة للإيميل:\n${email}؟`)) {
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    alert("✅ تم الإرسال! اطلب من المطعم فتح إيميله واختيار كلمة مرور جديدة.");
+                } catch(err) {
+                    alert("خطأ: " + err.message);
+                }
+            }
+        }
+
+        // ==========================================
+        // 5. الحذف (NUKE)
+        // ==========================================
+        async function nukeAccount(uid, name) {
+            const code = prompt(`لحذف مطعم "${name}" وجميع بياناته، اكتب كلمة "حذف":`);
+            if(code !== "حذف") return;
+
+            try {
+                // 1. حذف جميع المنتجات
+                const products = await db.collection('products').where('restaurant_id', '==', uid).get();
+                const batch = db.batch();
+                products.forEach(doc => batch.delete(doc.ref));
+                
+                // 2. حذف وثيقة المطعم (هذا سيمنع الدخول للكود لأن الملف غير موجود)
+                batch.delete(db.collection('restaurants').doc(uid));
+                
+                await batch.commit();
+                alert("⛔ تم تدمير البيانات. الحساب أصبح فارغاً ومعطلاً.");
+            } catch(err) {
+                alert("خطأ: " + err.message);
+            }
+        }
+    </script>
+
+</body>
+</html>
