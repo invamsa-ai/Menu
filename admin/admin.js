@@ -4,19 +4,28 @@ let currentRestaurantData = {};
 // عنصر شاشة التحميل
 const loadingOverlay = document.getElementById('loadingOverlay');
 
-// 1. مراقبة حالة تسجيل الدخول (البوابة الرئيسية)
+// admin/admin.js - التعديل في الجزء العلوي فقط
+
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         console.log("تم تسجيل الدخول: ", user.email);
         
-        // بمجرد الدخول، اجلب بيانات المطعم
-        await loadRestaurantData(user.uid);
-        
-        // إخفاء شاشة التحميل بعد جلب البيانات
-        if(loadingOverlay) loadingOverlay.style.display = 'none';
+        try {
+            // محاولة جلب البيانات
+            await loadRestaurantData(user.uid);
+            
+            // إذا وصلنا هنا يعني البيانات وصلت بنجاح
+            if(loadingOverlay) loadingOverlay.style.display = 'none';
+            
+        } catch (error) {
+            // هنا سيظهر سبب المشكلة في رسالة منبثقة
+            alert("حدث خطأ أثناء جلب البيانات:\n" + error.message);
+            console.error(error);
+            if(loadingOverlay) loadingOverlay.innerHTML = "❌ حدث خطأ: " + error.message;
+        }
+
     } else {
-        // إذا لم يكن مسجلاً، ارجعه لصفحة الدخول فوراً
         window.location.href = 'login.html';
     }
 });
