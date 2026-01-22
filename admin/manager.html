@@ -16,7 +16,7 @@
 
     <style>
         body { background: #222; color: #eee; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
         .header {
             display: flex; justify-content: space-between; align-items: center;
@@ -51,6 +51,11 @@
             background: #444; border: 1px solid #555; color: white; padding: 10px;
             border-radius: 5px; font-family: 'Cairo'; width: 100%; box-sizing: border-box;
         }
+        
+        /* تنسيق خاص لكلمة المرور */
+        .pass-badge {
+            background: #444; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #fab1a0;
+        }
     </style>
 </head>
 <body>
@@ -59,15 +64,15 @@
         <div class="header">
             <div>
                 <h2 style="margin:0;">Master Control ⚡</h2>
-                <small style="color:#aaa;">الإدارة المباشرة للمطاعم</small>
+                <small style="color:#aaa;">الإدارة المباشرة (كلمات المرور مكشوفة)</small>
             </div>
             <div id="connectionStatus" style="color: #2ed573;">
-                <i class="fas fa-wifi"></i> متصل كمسؤول
+                <i class="fas fa-wifi"></i> متصل
             </div>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-user-plus"></i> إنشاء حساب مطعم جديد</h3>
+            <h3><i class="fas fa-user-plus"></i> إنشاء مطعم جديد</h3>
             <div class="add-box">
                 <div>
                     <label style="display:block; margin-bottom:5px;">البريد الإلكتروني</label>
@@ -78,7 +83,7 @@
                     <input type="text" id="newPass" placeholder="******">
                 </div>
                 <button onclick="createAccount()" class="btn btn-create">
-                    <i class="fas fa-bolt"></i> إنشاء
+                    <i class="fas fa-bolt"></i> حفظ وإنشاء
                 </button>
             </div>
         </div>
@@ -88,13 +93,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>بيانات المطعم</th>
+                        <th>اسم المطعم</th>
+                        <th>بيانات الدخول (الإيميل / الباسوورد)</th>
                         <th>الحالة</th>
-                        <th>إجراءات التحكم</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="restList">
-                    <tr><td colspan="3" style="text-align:center">جاري التحميل...</td></tr>
+                    <tr><td colspan="4" style="text-align:center">جاري التحميل...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -102,22 +108,22 @@
 
     <script>
         // ==========================================
-        // بيانات الأدمن (ضع بياناتك هنا)
+        // بيانات الأدمن (يجب وضع بياناتك هنا ليعمل الدخول التلقائي)
         // ==========================================
-        const ADMIN_EMAIL = "admin@menunow.com"; // البريد الذي لا يجب حذفه
+        const ADMIN_EMAIL = "admin@menunow.com"; 
         const ADMIN_PASS = "123456"; 
 
         // تسجيل الدخول التلقائي
         auth.onAuthStateChanged(user => {
             if (!user) {
                 auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS)
-                    .catch(err => console.log("Login Check..."));
+                    .catch(err => console.log("جاري محاولة الدخول..."));
             } else {
                 loadRestaurants();
             }
         });
 
-        // 1. إنشاء حساب (باستخدام التطبيق الثانوي)
+        // 1. إنشاء حساب (مع حفظ كلمة المرور في قاعدة البيانات)
         async function createAccount() {
             const email = document.getElementById('newEmail').value;
             const pass = document.getElementById('newPass').value;
@@ -125,18 +131,21 @@
 
             if(!email || !pass) return alert("أدخل البيانات!");
 
-            btn.innerText = "جاري الإنشاء...";
+            btn.innerText = "جاري الحفظ...";
             
             try {
+                // إنشاء الحساب في Authentication
                 const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
                 const secondaryAuth = secondaryApp.auth();
 
                 const userCred = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
                 const uid = userCred.user.uid;
 
+                // حفظ البيانات + كلمة المرور في Firestore
                 await db.collection('restaurants').doc(uid).set({
                     owner_id: uid,
                     email: email,
+                    saved_password: pass, // ⚠️ هنا يتم حفظ كلمة المرور لتراها لاحقاً
                     name: "مطعم جديد",
                     status: "open",
                     created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -145,18 +154,18 @@
                 secondaryAuth.signOut();
                 secondaryApp.delete();
 
-                alert(`✅ تم إنشاء الحساب!\n\nEmail: ${email}\nPassword: ${pass}`);
+                alert(`✅ تم إنشاء الحساب وحفظ كلمة المرور!`);
                 document.getElementById('newEmail').value = '';
                 document.getElementById('newPass').value = '';
 
             } catch (err) {
                 alert("خطأ: " + err.message);
             } finally {
-                btn.innerHTML = '<i class="fas fa-bolt"></i> إنشاء';
+                btn.innerHTML = '<i class="fas fa-bolt"></i> حفظ وإنشاء';
             }
         }
 
-        // 2. عرض المطاعم (مع فلترة الأدمن)
+        // 2. عرض المطاعم
         function loadRestaurants() {
             db.collection('restaurants').onSnapshot(snapshot => {
                 const tbody = document.getElementById('restList');
@@ -166,8 +175,10 @@
                 snapshot.forEach(doc => {
                     const r = doc.data();
                     const email = r.email || "غير مسجل";
+                    // جلب كلمة المرور المحفوظة (إن وجدت)
+                    const password = r.saved_password || "غير محفوظة (حساب قديم)";
 
-                    // 🛑 فلترة: لا تعرض حساب الأدمن في الجدول
+                    // فلترة حساب الأدمن
                     if (email === ADMIN_EMAIL) return;
 
                     count++;
@@ -177,18 +188,21 @@
                         <tr>
                             <td>
                                 <div style="font-weight:bold; font-size:1.1rem;">${r.name}</div>
-                                <div style="color:#aaa; font-size:0.9rem;">${email}</div>
                                 <div style="color:#555; font-size:0.7rem;">ID: ${doc.id}</div>
+                            </td>
+                            <td>
+                                <div style="margin-bottom:5px;">📧 ${email}</div>
+                                <div>🔑 <span class="pass-badge">${password}</span></div>
                             </td>
                             <td>
                                 <span class="status-dot ${statusClass}"></span> ${r.status === 'open' ? 'مفتوح' : 'مغلق'}
                             </td>
                             <td>
-                                <button class="btn btn-reset" onclick="resetPass('${email}')" title="إرسال رابط لتغيير كلمة المرور">
-                                    <i class="fas fa-key"></i> استعادة كلمة المرور
+                                <button class="btn btn-reset" onclick="resetPass('${email}')" title="رابط استعادة">
+                                    <i class="fas fa-envelope"></i>
                                 </button>
-                                <button class="btn btn-delete" onclick="nukeAccount('${doc.id}', '${r.name}')" title="حذف نهائي">
-                                    <i class="fas fa-trash"></i> حذف
+                                <button class="btn btn-delete" onclick="nukeAccount('${doc.id}', '${r.name}')" title="حذف">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -200,10 +214,10 @@
 
         // 3. استعادة كلمة المرور
         async function resetPass(email) {
-            if(confirm(`سيتم إرسال رابط إلى ${email} لكي يقوم بوضع كلمة مرور جديدة.\n\nهل أنت موافق؟`)) {
+            if(confirm(`إرسال رابط استعادة كلمة المرور إلى ${email}؟`)) {
                 try {
                     await auth.sendPasswordResetEmail(email);
-                    alert("✅ تم الإرسال بنجاح!");
+                    alert("✅ تم الإرسال!");
                 } catch(err) {
                     alert("خطأ: " + err.message);
                 }
@@ -212,7 +226,7 @@
 
         // 4. الحذف
         async function nukeAccount(uid, name) {
-            const code = prompt(`تحذير: سيتم حذف مطعم "${name}" نهائياً!\n\nللتأكيد اكتب كلمة "حذف":`);
+            const code = prompt(`لحذف مطعم "${name}" اكتب "حذف":`);
             if(code !== "حذف") return;
 
             try {
@@ -223,7 +237,7 @@
                 batch.delete(db.collection('restaurants').doc(uid));
                 
                 await batch.commit();
-                alert("تم حذف البيانات. الحساب لن يعمل بعد الآن.");
+                alert("تم الحذف.");
             } catch(err) {
                 alert("خطأ: " + err.message);
             }
