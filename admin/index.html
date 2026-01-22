@@ -143,31 +143,48 @@
             </div>
 
             <div id="settings" class="admin-section">
-                <h2>إعدادات المطعم</h2>
-                <div class="admin-card" style="max-width: 600px;">
-                    <div class="form-group">
-                        <label>اسم المطعم</label>
-                        <input type="text" id="restName" class="form-control">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>إعدادات المطعم</h2>
+                </div>
+
+                <div class="admin-card">
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-store"></i> اسم المطعم</label>
+                            <input type="text" id="restName" class="form-control" placeholder="اكتب اسم المطعم...">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fab fa-whatsapp"></i> رقم الواتساب</label>
+                            <input type="text" id="restWhatsapp" class="form-control" placeholder="مثال: 966500000000">
+                            <small style="color: #777; font-size: 0.8rem;">اكتب الرقم مع مفتاح الدولة بدون +</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave"></i> العملة</label>
+                            <input type="text" id="restCurrency" class="form-control" placeholder="ر.س، د.ك، $...">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-door-open"></i> حالة المطعم</label>
+                            <select id="restStatus" class="form-control" style="cursor: pointer;">
+                                <option value="open">🟢 مفتوح (يستقبل الطلبات)</option>
+                                <option value="closed">🔴 مغلق (لا يستقبل الطلبات)</option>
+                            </select>
+                        </div>
+
                     </div>
-                    <div class="form-group">
-                        <label>رقم الواتساب</label>
-                        <input type="text" id="restWhatsapp" class="form-control" placeholder="966...">
-                    </div>
-                    <div class="form-group">
-                        <label>العملة</label>
-                        <input type="text" id="restCurrency" class="form-control" placeholder="ر.س">
-                    </div>
-                    <div class="form-group">
-                        <label>حالة المطعم</label>
-                        <select id="restStatus" class="form-control">
-                            <option value="open">مفتوح</option>
-                            <option value="closed">مغلق</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" onclick="saveSettings()">حفظ التغييرات</button>
+
+                    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+                    <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                        <i class="fas fa-save"></i> حفظ كافة التغييرات
+                    </button>
+
                 </div>
             </div>
-
         </div>
     </div>
 
