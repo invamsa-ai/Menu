@@ -8,7 +8,7 @@ const loadingOverlay = document.getElementById('loadingOverlay');
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
-        console.log("تم التعرف على المطعم:", user.uid); // هذا هو "الختم" الخاص بالمطعم
+        console.log("تم التعرف على المطعم:", user.uid); 
         
         try {
             await loadRestaurantData(user.uid);
@@ -29,19 +29,19 @@ function logout() {
     }
 }
 
-// 3. جلب بيانات المطعم الخاصة به فقط (باستخدام ID)
+// 3. جلب بيانات المطعم (تم التحديث لدعم ميزة الطلبات)
 async function loadRestaurantData(uid) {
     const docRef = db.collection('restaurants').doc(uid);
     const doc = await docRef.get();
 
     if (!doc.exists) {
-        // مطعم جديد؟ ننشئ له ملفاً خاصاً
         const defaultData = {
-            owner_id: uid, // ربط الملف بالمستخدم
+            owner_id: uid,
             name: "مطعم جديد",
             whatsapp: "",
             currency: "ر.س",
             status: "open",
+            ordering_enabled: true, // الافتراضي مفعل
             categories: ["عام"]
         };
         await docRef.set(defaultData);
@@ -56,18 +56,22 @@ async function loadRestaurantData(uid) {
     document.getElementById('restCurrency').value = currentRestaurantData.currency || 'ر.س';
     document.getElementById('restStatus').value = currentRestaurantData.status || 'open';
 
+    // تعبئة حالة نظام الطلبات
+    const isOrderingEnabled = currentRestaurantData.ordering_enabled !== false; 
+    document.getElementById('orderingStatus').value = isOrderingEnabled ? "true" : "false";
+
     // تحديث الأقسام والمنتجات
     renderAdminCategories();
     renderAdminProducts();
 }
 
-// 4. عرض المنتجات (مع الفلترة الصارمة)
+// 4. عرض المنتجات
 function renderAdminProducts() {
     const tbody = document.getElementById('adminProductsTable');
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">جاري جلب منتجاتك...</td></tr>';
 
     db.collection('products')
-      .where('restaurant_id', '==', currentUser.uid) // 🛑 السر هنا: جلب منتجاتي أنا فقط
+      .where('restaurant_id', '==', currentUser.uid) 
       .get()
       .then((querySnapshot) => {
           tbody.innerHTML = '';
@@ -98,7 +102,7 @@ function renderAdminProducts() {
       });
 }
 
-// 5. إضافة منتج (مع الختم)
+// 5. إضافة منتج
 async function addProduct(event) {
     event.preventDefault();
     
@@ -108,11 +112,11 @@ async function addProduct(event) {
 
     try {
         await db.collection('products').add({
-            restaurant_id: currentUser.uid, // 🛑 السر هنا: وضع ختم المطعم على المنتج
+            restaurant_id: currentUser.uid, 
             name: document.getElementById('pName').value,
             price: parseFloat(document.getElementById('pPrice').value),
             category: document.getElementById('pCategory').value,
-            image: document.getElementById('pImage').value,
+            image: document.getElementById('pImage').value, // سنعتمد الرابط هنا
             created_at: firebase.firestore.FieldValue.serverTimestamp()
         });
         
@@ -174,16 +178,25 @@ async function deleteCategory(catName) {
     }
 }
 
-// 8. حفظ الإعدادات
+// 8. حفظ الإعدادات (تم التحديث لحفظ حالة الطلبات)
 async function saveSettings() {
+    const btn = document.querySelector('button[onclick="saveSettings()"]');
+    btn.innerText = "جاري الحفظ...";
+    btn.disabled = true;
+
     const updatedData = {
         name: document.getElementById('restName').value,
         whatsapp: document.getElementById('restWhatsapp').value,
         currency: document.getElementById('restCurrency').value,
-        status: document.getElementById('restStatus').value
+        status: document.getElementById('restStatus').value,
+        ordering_enabled: document.getElementById('orderingStatus').value === "true"
     };
+    
     await db.collection('restaurants').doc(currentUser.uid).update(updatedData);
     currentRestaurantData = {...currentRestaurantData, ...updatedData};
+    
+    btn.innerHTML = '<i class="fas fa-save"></i> حفظ كافة التغييرات';
+    btn.disabled = false;
     alert("تم حفظ الإعدادات!");
 }
 

@@ -1,8 +1,8 @@
-// js/app.js - المنيو المتصل بقاعدة البيانات مع إصلاح البحث
+// js/app.js - المنيو المتصل بقاعدة البيانات مع ميزة إيقاف الطلبات
 
 let cart = JSON.parse(localStorage.getItem('myCart')) || []; 
 let currentRestaurant = {}; 
-let productsList = []; // هذه القائمة التي سنبحث فيها
+let productsList = []; 
 
 // 1. عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // تفعيل البحث 🔍 (هذا هو الكود الجديد)
+    // تفعيل البحث
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -45,6 +45,8 @@ function listenToRestaurantInfo(id) {
         }
         currentRestaurant = doc.data();
         updateHeaderUI();
+        // تحديث السلة في حال تغيرت حالة السماح بالطلب أثناء التصفح
+        updateCartUI();
     });
 }
 
@@ -105,12 +107,11 @@ function renderCategories() {
     `).join('');
 }
 
-// 6. فلترة المنتجات حسب القسم
+// 6. فلترة المنتجات
 function filterCategory(category, element) {
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
     
-    // تفريغ مربع البحث عند تغيير القسم
     document.getElementById('searchInput').value = '';
 
     const filtered = category === "الكل" 
@@ -149,7 +150,7 @@ function renderProducts(products) {
     `}).join('');
 }
 
-// 8. التعامل مع السلة
+// 8. التعامل مع السلة (تحديث كبير هنا)
 function addToCart(productId) {
     if (currentRestaurant.status === 'closed') {
         alert("عذراً، المطعم مغلق حالياً.");
@@ -168,7 +169,6 @@ function addToCart(productId) {
     saveCart();
     updateCartUI();
     
-    // توست بسيط للإشعار
     const btn = document.getElementById('cartBtn');
     btn.style.transform = 'scale(1.2)';
     setTimeout(() => btn.style.transform = 'scale(1)', 200);
@@ -182,16 +182,23 @@ function updateCartUI() {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.innerText = count;
     
-    // إخفاء/إظهار زر السلة حسب المحتوى
     const cartBtn = document.getElementById('cartBtn');
     if(count > 0) cartBtn.style.display = 'flex';
-    else cartBtn.style.display = 'none'; // اختياري: إخفاء الزر إذا فارغة
+    else cartBtn.style.display = 'none';
 
     if (!cartItems) return; 
+
+    // التحقق من تفعيل الطلب
+    const isOrderingEnabled = currentRestaurant.ordering_enabled !== false;
 
     if (cart.length === 0) {
         cartItems.innerHTML = '<div style="text-align:center; padding:2rem; color:#888;">السلة فارغة</div>';
         totalPriceElement.innerText = `0 ${currentRestaurant.currency || ''}`;
+        
+        // إخفاء الزر إذا السلة فارغة
+        const footerBtn = document.querySelector('.cart-footer button');
+        if(footerBtn) footerBtn.style.display = 'none';
+
     } else {
         cartItems.innerHTML = cart.map(item => `
             <div class="cart-item">
@@ -211,6 +218,24 @@ function updateCartUI() {
         
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         totalPriceElement.innerText = `${total} ${currentRestaurant.currency}`;
+
+        // التحكم في زر الإرسال حسب الإعدادات
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.style.display = 'flex';
+            
+            if (isOrderingEnabled) {
+                checkoutBtn.innerHTML = '<i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب';
+                checkoutBtn.onclick = sendOrder;
+                checkoutBtn.style.background = '#25D366';
+                checkoutBtn.style.cursor = 'pointer';
+            } else {
+                checkoutBtn.innerHTML = '🚫 استقبال الطلبات متوقف حالياً';
+                checkoutBtn.onclick = null; 
+                checkoutBtn.style.background = '#ccc'; 
+                checkoutBtn.style.cursor = 'not-allowed';
+            }
+        }
     }
 }
 
@@ -234,6 +259,9 @@ function toggleCart() {
 
 // 9. إرسال الطلب واتساب
 function sendOrder() {
+    // تحقق إضافي للحماية
+    if (currentRestaurant.ordering_enabled === false) return;
+
     if (cart.length === 0) return alert("السلة فارغة!");
     
     let message = `*طلب جديد من: ${currentRestaurant.name}*\n`;

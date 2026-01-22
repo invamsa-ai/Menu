@@ -10,7 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +20,6 @@
     <script src="../js/firebase-config.js"></script>
     
     <style>
-        /* نفس الستايل السابق */
         body { background-color: #f0f2f5; font-family: 'Cairo', sans-serif; }
         .admin-wrapper { display: flex; min-height: 100vh; }
         .sidebar { width: 250px; background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 2rem 1rem; }
@@ -41,7 +41,6 @@
             font-size: 1.5rem; color: var(--primary-color);
         }
 
-        /* تنسيق خيارات رفع الصورة */
         .image-upload-options {
             background: #f8f9fa;
             padding: 15px;
@@ -125,10 +124,12 @@
                     <h2>إدارة الأقسام</h2>
                 </div>
 
-                <div class="admin-card"> <div class="form-group" style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
+                <div class="admin-card"> 
+                    <div class="form-group" style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
                         <label style="font-size: 1.1rem; margin-bottom: 15px;">إضافة قسم جديد</label>
                         <div style="display: flex; gap: 15px;">
-                            <input type="text" id="newCatName" class="form-control" placeholder="اكتب اسم القسم هنا (مثلاً: العصائر، المشويات...)" style="flex: 1;"> <button class="btn btn-primary" onclick="addCategory()" style="min-width: 150px;">
+                            <input type="text" id="newCatName" class="form-control" placeholder="اكتب اسم القسم هنا (مثلاً: العصائر، المشويات...)" style="flex: 1;"> 
+                            <button class="btn btn-primary" onclick="addCategory()" style="min-width: 150px;">
                                 <i class="fas fa-plus"></i> إضافة القسم
                             </button>
                         </div>
@@ -138,7 +139,7 @@
 
                     <h3 style="margin-bottom: 15px;">الأقسام الحالية</h3>
                     <div id="adminCategoriesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -148,7 +149,6 @@
                 </div>
 
                 <div class="admin-card">
-                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
                         
                         <div class="form-group">
@@ -170,8 +170,16 @@
                         <div class="form-group">
                             <label><i class="fas fa-door-open"></i> حالة المطعم</label>
                             <select id="restStatus" class="form-control" style="cursor: pointer;">
-                                <option value="open">🟢 مفتوح (يستقبل الطلبات)</option>
-                                <option value="closed">🔴 مغلق (لا يستقبل الطلبات)</option>
+                                <option value="open">🟢 مفتوح</option>
+                                <option value="closed">🔴 مغلق</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label><i class="fas fa-shopping-cart"></i> نظام استقبال الطلبات</label>
+                            <select id="orderingStatus" class="form-control" style="cursor: pointer; background: #e3f2fd; border: 1px solid #90caf9;">
+                                <option value="true">✅ مفعل (السماح للزبائن بالطلب)</option>
+                                <option value="false">⛔ معطل (عرض المنيو فقط)</option>
                             </select>
                         </div>
 
@@ -211,14 +219,11 @@
                 
                 <div class="image-upload-options">
                     <label style="margin-bottom:10px;">صورة المنتج</label>
-                    
                     <div style="margin-bottom: 10px;">
                         <span style="font-size:0.9rem; color:#555;">1. رفع من الجهاز:</span>
                         <input type="file" id="imageFile" class="form-control" accept="image/*" style="margin-top:5px;">
                     </div>
-                    
                     <div style="text-align:center; color:#888; font-size:0.8rem; margin: 5px 0;">-- أو --</div>
-                    
                     <div>
                         <span style="font-size:0.9rem; color:#555;">2. رابط خارجي:</span>
                         <input type="text" id="pImage" class="form-control" placeholder="https://..." style="margin-top:5px;">
