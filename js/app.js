@@ -1,12 +1,11 @@
-// js/app.js - المنيو المتصل بقاعدة البيانات
+// js/app.js - المنيو المتصل بقاعدة البيانات مع إصلاح البحث
 
-let cart = JSON.parse(localStorage.getItem('myCart')) || []; // السلة
-let currentRestaurant = {}; // بيانات المطعم
-let productsList = []; // قائمة المنتجات
+let cart = JSON.parse(localStorage.getItem('myCart')) || []; 
+let currentRestaurant = {}; 
+let productsList = []; // هذه القائمة التي سنبحث فيها
 
 // 1. عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    // استخراج معرف المطعم من الرابط (e.g., ?id=xyz...)
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = urlParams.get('id');
 
@@ -20,21 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // تهيئة المستمعين (Real-time Listeners)
+    // تفعيل البحث 🔍 (هذا هو الكود الجديد)
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = productsList.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.category.toLowerCase().includes(term)
+            );
+            renderProducts(filtered);
+        });
+    }
+
     listenToRestaurantInfo(restaurantId);
     listenToProducts(restaurantId);
 });
 
-// 2. مراقبة بيانات المطعم (الاسم، الحالة، العملة)
+// 2. مراقبة بيانات المطعم
 function listenToRestaurantInfo(id) {
     db.collection('restaurants').doc(id).onSnapshot((doc) => {
         if (!doc.exists) {
             document.body.innerHTML = "<h1>المطعم غير موجود</h1>";
             return;
         }
-
         currentRestaurant = doc.data();
-        updateHeaderUI(); // تحديث الواجهة فوراً
+        updateHeaderUI();
     });
 }
 
@@ -44,7 +54,7 @@ function listenToProducts(id) {
     grid.innerHTML = '<div style="text-align:center; width:100%">جاري تحميل القائمة...</div>';
 
     db.collection('products')
-      .where('restaurant_id', '==', id) // جلب منتجات هذا المطعم فقط
+      .where('restaurant_id', '==', id)
       .onSnapshot((snapshot) => {
           productsList = [];
           
@@ -57,38 +67,33 @@ function listenToProducts(id) {
               productsList.push({ id: doc.id, ...doc.data() });
           });
 
-          // عرض الأقسام والمنتجات
           renderCategories();
-          renderProducts(productsList); // عرض الكل افتراضياً
-          updateCartUI(); // تحديث السلة لتناسب العملة الجديدة
+          renderProducts(productsList);
+          updateCartUI();
       });
 }
 
-// 4. تحديث واجهة الرأس (اسم المطعم وحالته)
+// 4. تحديث واجهة الرأس
 function updateHeaderUI() {
-    // تحديث الاسم
     const logoElements = document.querySelectorAll('.logo, h1');
     logoElements.forEach(el => {
         if(el.tagName === 'H1') el.innerText = "أهلاً بكم في " + currentRestaurant.name;
         else el.innerText = currentRestaurant.name;
     });
 
-    // تحديث حالة المطعم (مفتوح/مغلق)
     const statusBadge = document.getElementById('restaurantStatus');
     if (currentRestaurant.status === 'closed') {
         statusBadge.innerText = "مغلق حالياً 🔴";
-        statusBadge.style.background = '#dc3545'; // لون أحمر
-        
-        // إخفاء أزرار الإضافة للسلة إذا كان مغلقاً
+        statusBadge.className = 'status-badge status-closed';
         document.body.classList.add('restaurant-closed');
     } else {
         statusBadge.innerText = "مفتوح الآن 🟢";
-        statusBadge.style.background = '#28a745'; // لون أخضر
+        statusBadge.className = 'status-badge status-open';
         document.body.classList.remove('restaurant-closed');
     }
 }
 
-// 5. عرض الأقسام (تؤخذ من بيانات المطعم)
+// 5. عرض الأقسام
 function renderCategories() {
     const container = document.getElementById('categoriesContainer');
     const categories = ["الكل", ...(currentRestaurant.categories || [])];
@@ -100,13 +105,14 @@ function renderCategories() {
     `).join('');
 }
 
-// 6. فلترة المنتجات
+// 6. فلترة المنتجات حسب القسم
 function filterCategory(category, element) {
-    // تحديث الزر النشط
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
     
-    // الفلترة
+    // تفريغ مربع البحث عند تغيير القسم
+    document.getElementById('searchInput').value = '';
+
     const filtered = category === "الكل" 
         ? productsList 
         : productsList.filter(p => p.category === category);
@@ -114,18 +120,17 @@ function filterCategory(category, element) {
     renderProducts(filtered);
 }
 
-// 7. رسم المنتجات على الشاشة
+// 7. رسم المنتجات
 function renderProducts(products) {
     const grid = document.getElementById('productsGrid');
     
     if (products.length === 0) {
-        grid.innerHTML = '<div style="text-align:center; width:100%">لا يوجد منتجات في هذا القسم</div>';
+        grid.innerHTML = '<div style="text-align:center; width:100%; padding:20px; color:#777">لا توجد نتائج مطابقة</div>';
         return;
     }
 
     grid.innerHTML = products.map(product => {
         const image = product.image || 'https://via.placeholder.com/150';
-        // التحقق مما إذا كان المطعم مغلقاً لتعطيل الزر
         const isClosed = currentRestaurant.status === 'closed';
         
         return `
@@ -147,7 +152,7 @@ function renderProducts(products) {
 // 8. التعامل مع السلة
 function addToCart(productId) {
     if (currentRestaurant.status === 'closed') {
-        alert("عذراً، المطعم مغلق حالياً لا يستقبل طلبات.");
+        alert("عذراً، المطعم مغلق حالياً.");
         return;
     }
 
@@ -162,7 +167,11 @@ function addToCart(productId) {
     
     saveCart();
     updateCartUI();
-    showToast(`${product.name} أضيف للسلة`);
+    
+    // توست بسيط للإشعار
+    const btn = document.getElementById('cartBtn');
+    btn.style.transform = 'scale(1.2)';
+    setTimeout(() => btn.style.transform = 'scale(1)', 200);
 }
 
 function updateCartUI() {
@@ -170,9 +179,15 @@ function updateCartUI() {
     const cartItems = document.getElementById('cartItems');
     const totalPriceElement = document.getElementById('totalPrice');
     
-    cartCount.innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCount.innerText = count;
     
-    if (!cartItems) return; // في حال لم تكن السلة مفتوحة
+    // إخفاء/إظهار زر السلة حسب المحتوى
+    const cartBtn = document.getElementById('cartBtn');
+    if(count > 0) cartBtn.style.display = 'flex';
+    else cartBtn.style.display = 'none'; // اختياري: إخفاء الزر إذا فارغة
+
+    if (!cartItems) return; 
 
     if (cart.length === 0) {
         cartItems.innerHTML = '<div style="text-align:center; padding:2rem; color:#888;">السلة فارغة</div>';
@@ -187,9 +202,9 @@ function updateCartUI() {
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px">
-                    <button onclick="changeQuantity('${item.id}', -1)" style="width:25px;">-</button>
+                    <button onclick="changeQuantity('${item.id}', -1)" style="width:25px; height:25px; border-radius:50%; border:1px solid #ddd; background:white;">-</button>
                     <span>${item.quantity}</span>
-                    <button onclick="changeQuantity('${item.id}', 1)" style="width:25px;">+</button>
+                    <button onclick="changeQuantity('${item.id}', 1)" style="width:25px; height:25px; border-radius:50%; border:1px solid #ddd; background:white;">+</button>
                 </div>
             </div>
         `).join('');
@@ -213,6 +228,10 @@ function saveCart() {
     localStorage.setItem('myCart', JSON.stringify(cart));
 }
 
+function toggleCart() {
+    document.getElementById('cartModal').classList.toggle('active');
+}
+
 // 9. إرسال الطلب واتساب
 function sendOrder() {
     if (cart.length === 0) return alert("السلة فارغة!");
@@ -228,31 +247,16 @@ function sendOrder() {
     message += `------------------\n`;
     message += `*المجموع النهائي: ${total} ${currentRestaurant.currency}*`;
     
-    // رقم الواتساب من قاعدة البيانات
     const phone = currentRestaurant.whatsapp;
     if(!phone) {
-        alert("صاحب المطعم لم يقم بإعداد رقم الواتساب بعد.");
+        alert("رقم الواتساب غير متوفر.");
         return;
     }
 
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
     
-    // تفريغ السلة بعد الطلب (اختياري)
     cart = [];
     saveCart();
     updateCartUI();
     toggleCart();
-}
-
-// دوال مساعدة (UI)
-function toggleCart() {
-    document.getElementById('cartModal').classList.toggle('active');
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:9999;`;
-    toast.innerText = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
 }

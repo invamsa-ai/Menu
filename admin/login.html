@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - MenuNow Admin</title>
     <link rel="stylesheet" href="../css/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -20,6 +24,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Cairo', sans-serif !important;
         }
         .login-card {
             background: white;
@@ -32,7 +37,7 @@
         }
         .login-logo {
             font-size: 2.5rem;
-            font-weight: bold;
+            font-weight: 800;
             color: var(--primary-color);
             margin-bottom: 1rem;
         }
@@ -40,12 +45,34 @@
             background: #f8f9fa;
             border: 1px solid #eee;
             margin-bottom: 1rem;
+            font-family: 'Cairo', sans-serif !important;
         }
         .login-btn {
             width: 100%;
             padding: 1rem;
             font-size: 1.1rem;
             margin-top: 1rem;
+            font-weight: bold;
+        }
+        .card-footer-links {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .link-grey {
+            color: #888;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .link-primary {
+            color: var(--primary-color);
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .link-grey:hover, .link-primary:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -53,30 +80,34 @@
 
     <div class="login-card">
         <div class="login-logo">MenuNow</div>
-        <h2 style="margin-bottom: 2rem; color: #555;">لوحة تحكم المطعم</h2>
+        <h2 style="margin-bottom: 2rem; color: #555; font-weight: 700;">لوحة تحكم المطعم</h2>
         
         <form id="loginForm">
             <div class="form-group" style="text-align: right;">
-                <label>البريد الإلكتروني</label>
+                <label style="font-weight: 600;">البريد الإلكتروني</label>
                 <input type="email" id="email" class="form-control" placeholder="example@menu.com" required>
             </div>
             <div class="form-group" style="text-align: right;">
-                <label>كلمة المرور</label>
+                <label style="font-weight: 600;">كلمة المرور</label>
                 <input type="password" id="password" class="form-control" placeholder="أدخل كلمة المرور" required>
             </div>
-            <button type="submit" class="btn btn-primary login-btn">دخول</button>
+            <button type="submit" class="btn btn-primary login-btn">تسجيل الدخول</button>
         </form>
         
-        <p style="margin-top: 1.5rem; color: #888; font-size: 0.9rem;">
-            نسيت كلمة المرور؟ تواصل مع الدعم الفني
-        </p>
+        <div class="card-footer-links">
+            <a href="forgot-password.html" class="link-grey">
+                نسيت كلمة المرور؟
+            </a>
+
+            <a href="signup.html" class="link-primary">
+                إنشاء حساب جديد
+            </a>
+        </div>
     </div>
 
     <script>
-        // التحقق مما إذا كان المستخدم مسجلاً بالفعل للدخول مباشرة
         auth.onAuthStateChanged(user => {
             if (user) {
-                // إذا كان مسجلاً، اذهب للصفحة الرئيسية فوراً
                 window.location.href = 'index.html';
             }
         });
@@ -88,20 +119,16 @@
             const pass = document.getElementById('password').value;
             const btn = document.querySelector('.login-btn');
 
-            // تغيير نص الزر ليعرف المستخدم أن العملية جارية
             btn.innerText = "جاري التحقق...";
             btn.disabled = true;
             
-            // تسجيل الدخول الحقيقي عبر فايربيس
             auth.signInWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
-                    // نجاح الدخول
                     console.log("تم تسجيل الدخول:", userCredential.user);
                     window.location.href = 'index.html';
                 })
                 .catch((error) => {
-                    // فشل الدخول
-                    btn.innerText = "دخول";
+                    btn.innerText = "تسجيل الدخول";
                     btn.disabled = false;
                     
                     let errorMsg = "حدث خطأ في تسجيل الدخول";
