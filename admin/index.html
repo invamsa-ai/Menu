@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم MenuNow - إدارة المطعم</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <title>لوحة تحكم MenuNow</title>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -20,98 +19,306 @@
     <script src="../js/firebase-config.js"></script>
     
     <style>
-        body { background-color: #f0f2f5; font-family: 'Cairo', sans-serif; }
-        .admin-wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 250px; background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 2rem 1rem; }
-        .main-content { flex: 1; padding: 2rem; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 1rem; color: #555; text-decoration: none; border-radius: 10px; margin-bottom: 0.5rem; transition: 0.3s; cursor: pointer;}
-        .nav-link:hover, .nav-link.active { background: var(--primary-color); color: #fff; }
-        .stat-card { background: #fff; padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 20px; }
-        .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(255, 107, 0, 0.1); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .admin-section { display: none; }
+        :root {
+            --primary: #FF6B00;
+            --text: #333;
+            --bg: #f4f6f8;
+            --white: #fff;
+            --sidebar-width: 260px;
+        }
+
+        /* 1. إصلاح الخطوط والأيقونات */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* تطبيق خط كايرو على النصوص فقط */
+            font-family: 'Cairo', sans-serif; 
+        }
+
+        /* إجبار الأيقونات على استخدام خطها الأصلي */
+        .fas, .fab, .far, .fa {
+            font-family: 'Font Awesome 6 Free' !important;
+            font-weight: 900;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        /* تخطيط الصفحة */
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* الشريط الجانبي (للكمبيوتر) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            padding: 2rem 1.5rem;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: 0.3s;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 1rem;
+            color: #666;
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            transition: 0.3s;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 107, 0, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background: #ffe5e5;
+            color: #d32f2f;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        .logout-btn:hover {
+            background: #ffcccc;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width); /* ترك مسافة للسايدبار */
+            padding: 2rem;
+            transition: 0.3s;
+        }
+
+        /* البطاقات والجداول */
+        .admin-section { display: none; animation: fadeIn 0.4s; }
         .admin-section.active { display: block; }
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+
+        .admin-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+        }
+
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 1rem; text-align: right; border-bottom: 1px solid #eee; }
-        th { background: #fafafa; color: #777; }
+        th { color: #888; font-size: 0.9rem; }
+        .table-responsive { overflow-x: auto; }
+
+        /* الأزرار والحقول */
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            font-family: 'Cairo', sans-serif;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* =========================================
+           📱 تصميم الجوال (Responsive Design)
+           ========================================= */
+        @media (max-width: 768px) {
+            .admin-wrapper { flex-direction: column; }
+            
+            /* تحويل السايدبار إلى شريط سفلي (مثل التطبيقات) */
+            .sidebar {
+                width: 100%;
+                height: 70px; /* ارتفاع ثابت للشريط السفلي */
+                bottom: 0;
+                top: auto;
+                right: 0;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 0 10px;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+            }
+
+            .logo { display: none; } /* إخفاء الشعار في الشريط السفلي */
+            
+            .nav-link {
+                flex-direction: column;
+                gap: 5px;
+                font-size: 0.75rem;
+                padding: 8px;
+                margin: 0;
+                border-radius: 8px;
+            }
+
+            .nav-link i { font-size: 1.3rem; width: auto; }
+            
+            /* زر الخروج في الجوال */
+            .logout-btn {
+                width: auto;
+                padding: 8px;
+                margin: 0;
+                background: transparent;
+                color: #d32f2f;
+            }
+            .logout-btn span { display: none; } /* إخفاء كلمة "خروج" وإبقاء الأيقونة */
+            .logout-btn i { font-size: 1.3rem; }
+
+            /* المحتوى الرئيسي في الجوال */
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+                padding-bottom: 90px; /* مسافة عشان الشريط السفلي ما يغطي المحتوى */
+            }
+
+            /* إصلاح الجداول والشبكات في الجوال */
+            .stat-card { padding: 1rem; }
+            h2 { font-size: 1.5rem; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.5rem; color: var(--primary-color);
-        }
-
-        .image-upload-options {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px dashed #ccc;
-            margin-bottom: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .admin-wrapper { flex-direction: column; }
-            .sidebar { width: 100%; padding: 1rem; display: flex; overflow-x: auto; }
-            .nav-link { white-space: nowrap; padding: 0.5rem 1rem; }
-            .main-content { padding: 1rem; }
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 1.2rem; color: var(--primary); gap: 15px;
         }
     </style>
 </head>
 <body>
 
     <div id="loadingOverlay">
-        <i class="fas fa-spinner fa-spin"></i> &nbsp; جاري الاتصال بقاعدة البيانات...
+        <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+        <span>جاري التحميل...</span>
     </div>
 
     <div class="admin-wrapper">
         <div class="sidebar">
-            <div class="logo" style="margin-bottom: 2rem; text-align: center;">MenuNow Admin</div>
-            <a class="nav-link active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-line"></i> الإحصائيات</a>
-            <a class="nav-link" onclick="showSection('products', this)"><i class="fas fa-utensils"></i> المنتجات</a>
-            <a class="nav-link" onclick="showSection('categories', this)"><i class="fas fa-list"></i> الأقسام</a>
-            <a class="nav-link" onclick="showSection('settings', this)"><i class="fas fa-cog"></i> الإعدادات</a>
+            <div class="logo">MenuNow</div>
             
-            <div style="margin-top: auto;">
-                <button onclick="logout()" class="btn btn-danger" style="width: 100%; margin-top: 10px;">تسجيل خروج</button>
-            </div>
+            <a class="nav-link active" onclick="showSection('dashboard', this)">
+                <i class="fas fa-chart-pie"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a class="nav-link" onclick="showSection('products', this)">
+                <i class="fas fa-hamburger"></i>
+                <span>المنتجات</span>
+            </a>
+            <a class="nav-link" onclick="showSection('categories', this)">
+                <i class="fas fa-layer-group"></i>
+                <span>الأقسام</span>
+            </a>
+            <a class="nav-link" onclick="showSection('settings', this)">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </a>
+            
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>خروج</span>
+            </button>
         </div>
 
         <div class="main-content">
             
             <div id="dashboard" class="admin-section active">
-                <h2 style="margin-bottom: 2rem;">لوحة التحكم العامة</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-box"></i></div>
-                        <div><div style="color: #888; font-size: 0.9rem;">إجمالي المنتجات</div><div id="totalProductsCount" style="font-size: 1.5rem; font-weight: bold;">0</div></div>
+                <h2 style="margin-bottom: 1.5rem;">لوحة التحكم العامة</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div class="stat-card admin-card" style="display:flex; align-items:center; gap:15px;">
+                        <div style="background:rgba(255,107,0,0.1); width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:1.5rem;">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div>
+                            <div style="color:#888; font-size:0.9rem;">المنتجات</div>
+                            <div id="totalProductsCount" style="font-size:1.4rem; font-weight:800;">0</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-tags"></i></div>
-                        <div><div style="color: #888; font-size: 0.9rem;">إجمالي الأقسام</div><div id="totalCategoriesCount" style="font-size: 1.5rem; font-weight: bold;">0</div></div>
+                    <div class="stat-card admin-card" style="display:flex; align-items:center; gap:15px;">
+                        <div style="background:rgba(0,123,255,0.1); width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#007bff; font-size:1.5rem;">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div>
+                            <div style="color:#888; font-size:0.9rem;">الأقسام</div>
+                            <div id="totalCategoriesCount" style="font-size:1.4rem; font-weight:800;">0</div>
+                        </div>
                     </div>
                 </div>
+
                 <div class="admin-card">
-                    <h3>رابط المنيو و QR Code</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">رابط المنيو الخاص بك:</p>
-                    <button class="btn btn-primary" onclick="generateQR()">عرض الرابط</button>
-                    <div id="qrContainer" style="margin-top: 1.5rem;"></div>
+                    <h3><i class="fas fa-qrcode"></i> رابط المنيو</h3>
+                    <p style="color: #666; margin: 10px 0;">رابط المنيو الخاص بك للزبائن:</p>
+                    <button class="btn-primary" onclick="generateQR()" style="width:100%;">عرض الرابط والباركود</button>
+                    <div id="qrContainer" style="margin-top: 1.5rem; text-align: center;"></div>
                 </div>
             </div>
 
             <div id="products" class="admin-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h2>إدارة المنتجات</h2>
-                    <button class="btn btn-primary" onclick="document.getElementById('addProductModal').style.display='flex'">+ إضافة منتج</button>
+                    <button class="btn-primary" onclick="document.getElementById('addProductModal').style.display='flex'">
+                        <i class="fas fa-plus"></i> إضافة
+                    </button>
                 </div>
-                <div style="overflow-x: auto;">
-                    <table>
+                <div class="table-responsive">
+                    <table class="admin-card">
                         <thead>
                             <tr>
-                                <th>الصورة</th>
+                                <th>صورة</th>
                                 <th>الاسم</th>
                                 <th>القسم</th>
                                 <th>السعر</th>
-                                <th>الإجراءات</th>
+                                <th>حذف</th>
                             </tr>
                         </thead>
                         <tbody id="adminProductsTable"></tbody>
@@ -120,130 +327,109 @@
             </div>
 
             <div id="categories" class="admin-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2>إدارة الأقسام</h2>
-                </div>
-
+                <h2 style="margin-bottom: 1.5rem;">إدارة الأقسام</h2>
                 <div class="admin-card"> 
-                    <div class="form-group" style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
-                        <label style="font-size: 1.1rem; margin-bottom: 15px;">إضافة قسم جديد</label>
-                        <div style="display: flex; gap: 15px;">
-                            <input type="text" id="newCatName" class="form-control" placeholder="اكتب اسم القسم هنا (مثلاً: العصائر، المشويات...)" style="flex: 1;"> 
-                            <button class="btn btn-primary" onclick="addCategory()" style="min-width: 150px;">
-                                <i class="fas fa-plus"></i> إضافة القسم
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 20px;">
+                        <label style="font-weight:700; display:block; margin-bottom:10px;">إضافة قسم جديد</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="newCatName" class="form-control" placeholder="اسم القسم..."> 
+                            <button class="btn-primary" onclick="addCategory()">
+                                <i class="fas fa-check"></i>
                             </button>
                         </div>
                     </div>
-
-                    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
-
-                    <h3 style="margin-bottom: 15px;">الأقسام الحالية</h3>
-                    <div id="adminCategoriesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-                    </div>
+                    <div id="adminCategoriesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
             </div>
 
             <div id="settings" class="admin-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2>إعدادات المطعم</h2>
-                </div>
-
+                <h2 style="margin-bottom: 1.5rem;">الإعدادات</h2>
                 <div class="admin-card">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                    <div style="display: grid; gap: 20px;">
                         
-                        <div class="form-group">
-                            <label><i class="fas fa-store"></i> اسم المطعم</label>
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:5px;">اسم المطعم</label>
                             <input type="text" id="restName" class="form-control" placeholder="اكتب اسم المطعم...">
                         </div>
 
-                        <div class="form-group">
-                            <label><i class="fab fa-whatsapp"></i> رقم الواتساب</label>
-                            <input type="text" id="restWhatsapp" class="form-control" placeholder="مثال: 966500000000">
-                            <small style="color: #777; font-size: 0.8rem;">اكتب الرقم مع مفتاح الدولة بدون +</small>
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:5px;">رقم الواتساب</label>
+                            <input type="text" id="restWhatsapp" class="form-control" placeholder="966...">
                         </div>
 
-                        <div class="form-group">
-                            <label><i class="fas fa-money-bill-wave"></i> العملة</label>
-                            <input type="text" id="restCurrency" class="form-control" placeholder="ر.س، د.ك، $...">
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:5px;">العملة</label>
+                            <input type="text" id="restCurrency" class="form-control" placeholder="ر.س">
                         </div>
 
-                        <div class="form-group">
-                            <label><i class="fas fa-door-open"></i> حالة المطعم</label>
-                            <select id="restStatus" class="form-control" style="cursor: pointer;">
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:5px;">حالة المطعم</label>
+                            <select id="restStatus" class="form-control">
                                 <option value="open">🟢 مفتوح</option>
                                 <option value="closed">🔴 مغلق</option>
                             </select>
                         </div>
 
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label><i class="fas fa-shopping-cart"></i> نظام استقبال الطلبات</label>
-                            <select id="orderingStatus" class="form-control" style="cursor: pointer; background: #e3f2fd; border: 1px solid #90caf9;">
-                                <option value="true">✅ مفعل (السماح للزبائن بالطلب)</option>
-                                <option value="false">⛔ معطل (عرض المنيو فقط)</option>
+                        <div style="background:#e3f2fd; padding:15px; border-radius:10px; border:1px solid #90caf9;">
+                            <label style="font-weight:700; display:block; margin-bottom:5px; color:#1565c0;">نظام الطلبات</label>
+                            <select id="orderingStatus" class="form-control">
+                                <option value="true">✅ مفعل (استقبال طلبات)</option>
+                                <option value="false">⛔ معطل (للعرض فقط)</option>
                             </select>
                         </div>
 
+                        <button class="btn-primary" onclick="saveSettings()" style="margin-top:10px;">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
                     </div>
-
-                    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
-
-                    <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%; padding: 15px; font-size: 1.1rem;">
-                        <i class="fas fa-save"></i> حفظ كافة التغييرات
-                    </button>
-
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="addProductModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-        <div class="admin-card" style="width:90%; max-width:500px; margin: 5% auto;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
-                <h3>إضافة منتج جديد</h3>
-                <span onclick="document.getElementById('addProductModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+    <div id="addProductModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; padding: 20px;">
+        <div class="admin-card" style="width:100%; max-width:500px; max-height: 90vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem; align-items:center;">
+                <h3>منتج جديد</h3>
+                <i class="fas fa-times" onclick="document.getElementById('addProductModal').style.display='none'" style="cursor:pointer; font-size:1.5rem; color:#888;"></i>
             </div>
             
-            <form onsubmit="addProduct(event)">
-                <div class="form-group">
-                    <label>اسم المنتج</label>
+            <form onsubmit="addProduct(event)" style="display:grid; gap:15px;">
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:700;">اسم المنتج</label>
                     <input type="text" id="pName" class="form-control" required>
                 </div>
-                <div class="form-group">
-                    <label>السعر</label>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:700;">السعر</label>
                     <input type="number" id="pPrice" class="form-control" required>
                 </div>
-                <div class="form-group">
-                    <label>القسم</label>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:700;">القسم</label>
                     <select id="pCategory" class="form-control" required></select>
                 </div>
                 
-                <div class="image-upload-options">
-                    <label style="margin-bottom:10px;">صورة المنتج</label>
-                    <div style="margin-bottom: 10px;">
-                        <span style="font-size:0.9rem; color:#555;">1. رفع من الجهاز:</span>
-                        <input type="file" id="imageFile" class="form-control" accept="image/*" style="margin-top:5px;">
-                    </div>
-                    <div style="text-align:center; color:#888; font-size:0.8rem; margin: 5px 0;">-- أو --</div>
-                    <div>
-                        <span style="font-size:0.9rem; color:#555;">2. رابط خارجي:</span>
-                        <input type="text" id="pImage" class="form-control" placeholder="https://..." style="margin-top:5px;">
-                    </div>
+                <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
+                    <label style="margin-bottom:10px; display:block; font-weight:700;">الصورة</label>
+                    <input type="file" id="imageFile" class="form-control" accept="image/*" style="margin-bottom:10px;">
+                    <div style="text-align:center; color:#888; font-size:0.8rem; margin:5px 0;">-- أو رابط --</div>
+                    <input type="text" id="pImage" class="form-control" placeholder="https://...">
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width:100%;">حفظ المنتج</button>
+                <button type="submit" class="btn-primary" style="width:100%;">حفظ المنتج</button>
             </form>
         </div>
     </div>
 
     <script src="admin.js"></script>
-    
     <script>
         function showSection(sectionId, element) {
             document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            element.classList.add('active');
+            if(element) element.classList.add('active');
+            
+            // في الجوال، نخفي القائمة إذا أردت، لكن هنا شريط سفلي فلا داعي للإخفاء
         }
     </script>
 </body>
