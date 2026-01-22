@@ -10,11 +10,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <script src="../js/firebase-config.js"></script>
+    
     <style>
-        body { background-color: #f0f2f5; }
+        /* نفس الستايل السابق */
+        body { background-color: #f0f2f5; font-family: 'Cairo', sans-serif; }
         .admin-wrapper { display: flex; min-height: 100vh; }
         .sidebar { width: 250px; background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); padding: 2rem 1rem; }
         .main-content { flex: 1; padding: 2rem; }
@@ -28,12 +34,20 @@
         th, td { padding: 1rem; text-align: right; border-bottom: 1px solid #eee; }
         th { background: #fafafa; color: #777; }
         
-        /* شاشة التحميل */
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.9); z-index: 9999;
             display: flex; justify-content: center; align-items: center;
             font-size: 1.5rem; color: var(--primary-color);
+        }
+
+        /* تنسيق خيارات رفع الصورة */
+        .image-upload-options {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed #ccc;
+            margin-bottom: 15px;
         }
 
         @media (max-width: 768px) {
@@ -79,7 +93,7 @@
                 </div>
                 <div class="admin-card">
                     <h3>رابط المنيو و QR Code</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">هذا هو الرابط الخاص بمطعمك، سيظهر فيه منتجاتك فقط.</p>
+                    <p style="color: #666; margin-bottom: 1rem;">رابط المنيو الخاص بك:</p>
                     <button class="btn btn-primary" onclick="generateQR()">عرض الرابط</button>
                     <div id="qrContainer" style="margin-top: 1.5rem;"></div>
                 </div>
@@ -90,7 +104,6 @@
                     <h2>إدارة المنتجات</h2>
                     <button class="btn btn-primary" onclick="document.getElementById('addProductModal').style.display='flex'">+ إضافة منتج</button>
                 </div>
-                
                 <div style="overflow-x: auto;">
                     <table>
                         <thead>
@@ -102,8 +115,7 @@
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
-                        <tbody id="adminProductsTable">
-                            </tbody>
+                        <tbody id="adminProductsTable"></tbody>
                     </table>
                 </div>
             </div>
@@ -118,8 +130,7 @@
                             <button class="btn btn-primary" onclick="addCategory()">إضافة</button>
                         </div>
                     </div>
-                    <div id="adminCategoriesList">
-                        </div>
+                    <div id="adminCategoriesList"></div>
                 </div>
             </div>
 
@@ -131,7 +142,7 @@
                         <input type="text" id="restName" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label>رقم الواتساب (مثال: 966500000000)</label>
+                        <label>رقم الواتساب</label>
                         <input type="text" id="restWhatsapp" class="form-control" placeholder="966...">
                     </div>
                     <div class="form-group">
@@ -172,10 +183,23 @@
                     <label>القسم</label>
                     <select id="pCategory" class="form-control" required></select>
                 </div>
-                <div class="form-group">
-                   <label>رابط الصورة (اختياري)</label>
-                   <input type="text" id="pImage" class="form-control" placeholder="https://...">
+                
+                <div class="image-upload-options">
+                    <label style="margin-bottom:10px;">صورة المنتج</label>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <span style="font-size:0.9rem; color:#555;">1. رفع من الجهاز:</span>
+                        <input type="file" id="imageFile" class="form-control" accept="image/*" style="margin-top:5px;">
+                    </div>
+                    
+                    <div style="text-align:center; color:#888; font-size:0.8rem; margin: 5px 0;">-- أو --</div>
+                    
+                    <div>
+                        <span style="font-size:0.9rem; color:#555;">2. رابط خارجي:</span>
+                        <input type="text" id="pImage" class="form-control" placeholder="https://..." style="margin-top:5px;">
+                    </div>
                 </div>
+
                 <button type="submit" class="btn btn-primary" style="width:100%;">حفظ المنتج</button>
             </form>
         </div>
@@ -184,7 +208,6 @@
     <script src="admin.js"></script>
     
     <script>
-        // دالة التنقل بين التبويبات
         function showSection(sectionId, element) {
             document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');

@@ -1,3 +1,6 @@
+/* 1. استيراد خط Cairo من جوجل */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
+
 :root {
     --primary-color: #FF6B00; /* برتقالي جذاب */
     --secondary-color: #FFFFFF; /* أبيض */
@@ -8,11 +11,13 @@
     --transition: all 0.3s ease;
 }
 
+/* 2. تطبيق الخط على جميع العناصر */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* هذا السطر هو المسؤول عن تغيير الخط في كامل الموقع */
+    font-family: 'Cairo', sans-serif !important;
 }
 
 body {
@@ -37,7 +42,7 @@ header {
 
 .logo {
     font-size: 1.8rem;
-    font-weight: bold;
+    font-weight: 800; /* سميك جداً */
     color: var(--primary-color);
 }
 
@@ -45,7 +50,7 @@ header {
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .status-open {
@@ -77,6 +82,7 @@ header {
     cursor: pointer;
     transition: var(--transition);
     border: 1px solid transparent;
+    font-weight: 600; /* سميك متوسط */
 }
 
 .category-item.active, .category-item:hover {
@@ -117,13 +123,13 @@ header {
 
 .product-name {
     font-size: 1.2rem;
-    font-weight: bold;
+    font-weight: 700; /* سميك للعناوين */
     margin-bottom: 0.5rem;
 }
 
 .product-price {
     color: var(--primary-color);
-    font-weight: bold;
+    font-weight: 800; /* سميك للسعر */
     font-size: 1.1rem;
 }
 
@@ -131,12 +137,12 @@ header {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.7rem 1rem;
     border-radius: 8px;
     cursor: pointer;
     width: 100%;
     margin-top: 1rem;
-    font-weight: bold;
+    font-weight: 700;
     transition: var(--transition);
 }
 
@@ -174,7 +180,7 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 0.8rem;
     border: 2px solid var(--primary-color);
 }
@@ -204,6 +210,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 700;
 }
 
 .cart-items {
@@ -228,21 +235,21 @@ header {
 
 .total-price {
     font-size: 1.3rem;
-    font-weight: bold;
+    font-weight: 800;
     margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
 }
 
 .checkout-btn {
-    background: #25D366; /* WhatsApp Green */
+    background: #25D366; /* لون الواتساب */
     color: white;
     border: none;
     padding: 1rem;
     width: 100%;
     border-radius: 10px;
     font-size: 1.1rem;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -272,7 +279,7 @@ header {
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .form-control {
@@ -280,6 +287,8 @@ header {
     padding: 0.8rem;
     border: 1px solid #ddd;
     border-radius: 8px;
+    /* تأكيد الخط في حقول الإدخال */
+    font-family: 'Cairo', sans-serif !important; 
 }
 
 .btn {
@@ -287,7 +296,7 @@ header {
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 700;
     transition: var(--transition);
 }
 
