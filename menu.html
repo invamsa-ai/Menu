@@ -20,37 +20,7 @@
     <script src="js/app.js"></script>
 
     <style>
-        /* إضافة ستايل الأيقونات هنا */
-        .social-bar {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        .social-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            font-size: 1.2rem;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            background-color: #333; /* لون افتراضي */
-        }
-        .social-icon:hover { transform: translateY(-3px); color: white; }
-
-        /* ألوان المنصات */
-        .wa-icon { background: #25D366; }
-        .in-icon { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .sn-icon { background: #FFFC00; color: #000; text-shadow: none; }
-        .tk-icon { background: #000000; }
-        
-        /* تحسين مظهر البانر */
+        /* إضافة ستايل الأيقونات هنا لضمان عملها */
         .hero-section {
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&q=80');
             background-size: cover;
@@ -66,6 +36,36 @@
             border-bottom-left-radius: 20px;
             border-bottom-right-radius: 20px;
         }
+
+        .social-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background-color: #333; /* لون احتياطي */
+        }
+        .social-icon:hover { transform: translateY(-3px); color: white; }
+
+        /* ألوان المنصات */
+        .wa-icon { background: #25D366; }
+        .in-icon { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .sn-icon { background: #FFFC00; color: #000; text-shadow: none; }
+        .tk-icon { background: #000000; }
     </style>
 </head>
 <body>
@@ -128,7 +128,7 @@
                     if (doc.exists) {
                         const data = doc.data();
                         
-                        // تحديث اسم المطعم
+                        // تحديث اسم المطعم في البانر
                         if(data.name) document.getElementById('menuTitle').innerText = data.name;
 
                         // عرض الأيقونات إذا كانت موجودة
@@ -140,7 +140,6 @@
                     console.log("Error loading restaurant data:", error);
                 }
             } else {
-                // إذا لم يوجد ID في الرابط (للغرض التجريبي، يمكن جلب أول مطعم أو تركها فارغة)
                 console.log("No restaurant ID provided in URL");
             }
         });
