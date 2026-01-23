@@ -5,71 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Control - الإدارة العليا</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-
- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
-    
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
     <script src="../js/firebase-config.js"></script>
 
     <style>
-        body { background: #222; color: #eee; font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        :root { --primary: #FF6B00; --bg: #1a1a1a; --card-bg: #2d2d2d; --text: #eee; --border: #444; }
         
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* الهيدر */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px;
-            border-left: 5px solid #ff4757;
+            background: var(--card-bg); padding: 20px; border-radius: 15px;
+            margin-bottom: 30px; border-right: 5px solid var(--primary);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* البطاقات */
+        .card {
+            background: var(--card-bg); padding: 25px; border-radius: 15px;
+            margin-bottom: 25px; border: 1px solid var(--border);
         }
         
-        .card { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        h2, h3 { margin-top: 0; color: #fff; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #444; }
-        th { color: #aaa; font-size: 0.9rem; }
-        tr:hover { background: #3a3a3a; }
+        /* الجدول */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { color: #aaa; font-size: 0.9rem; background: #252525; }
+        tr:hover { background: #353535; }
         
+        /* الأزرار */
         .btn {
-            padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer;
-            font-family: 'Cairo', sans-serif; font-weight: bold; transition: 0.2s;
+            padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px;
         }
-        .btn-create { background: #2ed573; color: #fff; width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 15px; }
+        .btn-create { background: var(--primary); color: white; width: 100%; padding: 12px; font-size: 1.1rem; justify-content: center; margin-top: 15px; }
         .btn-delete { background: #ff4757; color: white; }
-        .btn-reset { background: #ffa502; color: white; }
-        
-        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-left: 5px; }
-        .open { background: #2ed573; }
-        .closed { background: #ff4757; }
+        .btn-edit { background: #2ed573; color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        .add-box {
-            background: #2f3542; padding: 20px; border-radius: 10px; border: 1px solid #444;
-        }
+        /* حالة المطعم */
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .open { background: rgba(46, 213, 115, 0.2); color: #2ed573; }
+        .closed { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
 
-        /* تنسيق الحقول */
-        .input-group { margin-bottom: 10px; }
-        .input-label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
-        
-        input {
-            background: #444; border: 1px solid #555; color: white; padding: 10px;
-            border-radius: 5px; font-family: 'Cairo'; width: 100%; box-sizing: border-box;
+        /* نموذج الإضافة والتعديل */
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; color: #bbb; font-size: 0.9rem; }
+        input, select {
+            background: #404040; border: 1px solid var(--border); color: white;
+            padding: 12px; border-radius: 8px; width: 100%; outline: none;
         }
+        input:focus { border-color: var(--primary); }
 
-        /* شبكة لإدخال البيانات الأساسية */
-        .credentials-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
-        }
+        /* أيقونات التواصل */
+        .social-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .social-input-wrapper { position: relative; }
+        .social-input-wrapper i { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); color: #888; }
+        .social-input-wrapper input { padding-right: 35px; font-size: 0.9rem; }
 
-        /* شبكة لإدخال الروابط */
-        .social-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            border-top: 1px solid #444; padding-top: 15px;
+        /* مودال التعديل */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
         }
-        
-        .pass-badge {
-            background: #444; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #fab1a0;
+        .modal-content {
+            background: #2d2d2d; padding: 30px; border-radius: 15px; width: 90%; max-width: 800px;
+            max-height: 90vh; overflow-y: auto; border: 1px solid var(--border);
         }
     </style>
 </head>
@@ -78,189 +91,217 @@
     <div class="container">
         <div class="header">
             <div>
-                <h2 style="margin:0;">Master Control ⚡</h2>
-                <small style="color:#aaa;">الإدارة المباشرة (كلمات المرور مكشوفة)</small>
+                <h1 style="margin:0; font-size:1.8rem;">Master Control <span style="color:var(--primary)">V2</span></h1>
+                <small style="color:#aaa;">لوحة التحكم الشاملة لجميع المطاعم</small>
             </div>
-            <div id="connectionStatus" style="color: #2ed573;">
+            <div id="connectionStatus" style="color: #2ed573; font-weight:bold;">
                 <i class="fas fa-wifi"></i> متصل
             </div>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-user-plus"></i> إنشاء مطعم جديد</h3>
-            <div class="add-box">
-                
-                <div class="credentials-grid">
-                    <div>
-                        <label class="input-label">البريد الإلكتروني</label>
-                        <input type="email" id="newEmail" placeholder="user@restaurant.com">
-                    </div>
-                    <div>
-                        <label class="input-label">كلمة المرور</label>
-                        <input type="text" id="newPass" placeholder="******">
-                    </div>
+            <h3><i class="fas fa-store"></i> تسجيل مطعم جديد</h3>
+            <div class="grid-form">
+                <div class="input-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="newEmail" placeholder="email@example.com">
                 </div>
-
-                <div class="social-grid">
-                    <div>
-                        <label class="input-label"><i class="fab fa-whatsapp"></i> رقم الواتساب (مع مفتاح الدولة)</label>
-                        <input type="text" id="waNumber" placeholder="9665xxxxxxxx">
-                    </div>
-                    <div>
-                        <label class="input-label"><i class="fab fa-instagram"></i> رابط انستقرام</label>
-                        <input type="text" id="instaLink" placeholder="https://instagram.com/...">
-                    </div>
-                    <div>
-                        <label class="input-label"><i class="fab fa-snapchat"></i> رابط سناب شات</label>
-                        <input type="text" id="snapLink" placeholder="https://snapchat.com/...">
-                    </div>
-                    <div>
-                        <label class="input-label"><i class="fab fa-tiktok"></i> رابط تيك توك</label>
-                        <input type="text" id="tiktokLink" placeholder="https://tiktok.com/...">
-                    </div>
+                <div class="input-group">
+                    <label>كلمة المرور</label>
+                    <input type="text" id="newPass" placeholder="******">
                 </div>
-
-                <button onclick="createAccount()" class="btn btn-create">
-                    <i class="fas fa-bolt"></i> حفظ وإنشاء الحساب
-                </button>
             </div>
+            
+            <div class="social-inputs">
+                <div class="social-input-wrapper"><i class="fab fa-whatsapp"></i><input type="text" id="newWa" placeholder="واتساب (966..)"></div>
+                <div class="social-input-wrapper"><i class="fab fa-instagram"></i><input type="text" id="newInsta" placeholder="رابط انستقرام"></div>
+                <div class="social-input-wrapper"><i class="fab fa-snapchat"></i><input type="text" id="newSnap" placeholder="رابط سناب"></div>
+                <div class="social-input-wrapper"><i class="fab fa-tiktok"></i><input type="text" id="newTiktok" placeholder="رابط تيك توك"></div>
+            </div>
+
+            <button onclick="createAccount()" class="btn btn-create">
+                <i class="fas fa-plus-circle"></i> إنشاء الحساب وحفظ البيانات
+            </button>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-users"></i> المطاعم الحالية (<span id="count">0</span>)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>اسم المطعم</th>
-                        <th>بيانات الدخول (الإيميل / الباسوورد)</th>
-                        <th>الحالة</th>
-                        <th>إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="restList">
-                    <tr><td colspan="4" style="text-align:center">جاري التحميل...</td></tr>
-                </tbody>
-            </table>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3><i class="fas fa-list"></i> جميع المطاعم المسجلة (<span id="count">0</span>)</h3>
+                <input type="text" placeholder="بحث..." style="width:200px; padding:8px;" onkeyup="filterTable(this.value)">
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th>المطعم</th>
+                            <th>بيانات الدخول</th>
+                            <th>الحالة</th>
+                            <th>الروابط</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="restList">
+                        <tr><td colspan="5" style="text-align:center">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>تعديل بيانات المطعم</h3>
+                <i class="fas fa-times" onclick="closeEditModal()" style="cursor:pointer; font-size:1.5rem;"></i>
+            </div>
+            
+            <input type="hidden" id="editUid">
+            
+            <div class="grid-form">
+                <div class="input-group">
+                    <label>اسم المطعم</label>
+                    <input type="text" id="editName">
+                </div>
+                <div class="input-group">
+                    <label>العملة</label>
+                    <input type="text" id="editCurrency">
+                </div>
+                <div class="input-group">
+                    <label>حالة المطعم</label>
+                    <select id="editStatus">
+                        <option value="open">🟢 مفتوح</option>
+                        <option value="closed">🔴 مغلق</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>نظام الطلبات</label>
+                    <select id="editOrdering">
+                        <option value="true">✅ مفعل</option>
+                        <option value="false">⛔ معطل</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" style="grid-column: 1 / -1; border-top:1px solid #444; padding-top:10px; margin-top:10px;">
+                    <label style="color:#fab1a0">تعديل كلمة المرور (للعرض فقط)</label>
+                    <input type="text" id="editSavedPass" placeholder="اكتب كلمة المرور الجديدة لحفظها هنا">
+                    <small style="color:#888;">* هذا يغير الكلمة المسجلة في قاعدة البيانات للعرض، لتغيير الدخول الفعلي استخدم لوحة فيربيس أو إعادة تعيين.</small>
+                </div>
+            </div>
+
+            <h4 style="margin:20px 0 10px; border-bottom:1px solid #444; padding-bottom:5px;">روابط التواصل</h4>
+            <div class="social-inputs">
+                <div class="social-input-wrapper"><i class="fab fa-whatsapp"></i><input type="text" id="editWa"></div>
+                <div class="social-input-wrapper"><i class="fab fa-instagram"></i><input type="text" id="editInsta"></div>
+                <div class="social-input-wrapper"><i class="fab fa-snapchat"></i><input type="text" id="editSnap"></div>
+                <div class="social-input-wrapper"><i class="fab fa-tiktok"></i><input type="text" id="editTiktok"></div>
+            </div>
+
+            <button onclick="saveEdit()" class="btn btn-create" style="background:#2ed573; margin-top:20px;">
+                <i class="fas fa-save"></i> حفظ التغييرات
+            </button>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // بيانات الأدمن (يجب وضع بياناتك هنا ليعمل الدخول التلقائي)
-        // ==========================================
-        const ADMIN_EMAIL = "admin@admin.com"; 
+        // بيانات الدخول للأدمن الرئيسي
+        const ADMIN_EMAIL = "admin@menunow.com"; 
         const ADMIN_PASS = "123456"; 
 
         // تسجيل الدخول التلقائي
         auth.onAuthStateChanged(user => {
             if (!user) {
-                auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS)
-                    .catch(err => console.log("جاري محاولة الدخول..."));
+                auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS).catch(e => console.log(e));
             } else {
                 loadRestaurants();
             }
         });
 
-        // 1. إنشاء حساب (مع حفظ كلمة المرور والروابط)
+        // 1. إنشاء حساب جديد
         async function createAccount() {
             const email = document.getElementById('newEmail').value;
             const pass = document.getElementById('newPass').value;
-            
-            // جلب قيم التواصل الاجتماعي
-            const whatsapp = document.getElementById('waNumber').value;
-            const instagram = document.getElementById('instaLink').value;
-            const snapchat = document.getElementById('snapLink').value;
-            const tiktok = document.getElementById('tiktokLink').value;
-
+            const wa = document.getElementById('newWa').value;
+            const insta = document.getElementById('newInsta').value;
+            const snap = document.getElementById('newSnap').value;
+            const tiktok = document.getElementById('newTiktok').value;
             const btn = document.querySelector('.btn-create');
 
             if(!email || !pass) return alert("أدخل البريد وكلمة المرور!");
 
-            btn.innerText = "جاري الحفظ...";
+            btn.innerText = "جاري العمل...";
             
             try {
-                // إنشاء الحساب في Authentication
+                // إنشاء في Authentication
                 const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
-                const secondaryAuth = secondaryApp.auth();
-
-                const userCred = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
+                const userCred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
                 const uid = userCred.user.uid;
 
-                // حفظ البيانات + كلمة المرور + الروابط في Firestore
+                // حفظ البيانات كاملة
                 await db.collection('restaurants').doc(uid).set({
                     owner_id: uid,
                     email: email,
-                    saved_password: pass, 
+                    saved_password: pass, // حفظ الباسوورد
                     name: "مطعم جديد",
+                    currency: "ر.س",
                     status: "open",
+                    ordering_enabled: true,
                     created_at: firebase.firestore.FieldValue.serverTimestamp(),
-                    // إضافة كائن الروابط هنا
-                    social: {
-                        whatsapp: whatsapp || "",
-                        instagram: instagram || "",
-                        snapchat: snapchat || "",
-                        tiktok: tiktok || ""
-                    }
+                    social: { whatsapp: wa, instagram: insta, snapchat: snap, tiktok: tiktok }
                 });
 
-                secondaryAuth.signOut();
+                secondaryApp.auth().signOut();
                 secondaryApp.delete();
 
-                alert(`✅ تم إنشاء الحساب وحفظ البيانات بنجاح!`);
-                
-                // تفريغ الحقول
-                document.getElementById('newEmail').value = '';
-                document.getElementById('newPass').value = '';
-                document.getElementById('waNumber').value = '';
-                document.getElementById('instaLink').value = '';
-                document.getElementById('snapLink').value = '';
-                document.getElementById('tiktokLink').value = '';
-
+                alert("تم الإنشاء بنجاح!");
+                location.reload(); // تحديث لتفريغ الحقول
             } catch (err) {
                 alert("خطأ: " + err.message);
             } finally {
-                btn.innerHTML = '<i class="fas fa-bolt"></i> حفظ وإنشاء الحساب';
+                btn.innerHTML = '<i class="fas fa-plus-circle"></i> إنشاء الحساب وحفظ البيانات';
             }
         }
 
         // 2. عرض المطاعم
         function loadRestaurants() {
-            db.collection('restaurants').onSnapshot(snapshot => {
+            db.collection('restaurants').orderBy('created_at', 'desc').onSnapshot(snap => {
                 const tbody = document.getElementById('restList');
-                let count = 0;
                 tbody.innerHTML = '';
+                let count = 0;
 
-                snapshot.forEach(doc => {
-                    const r = doc.data();
-                    const email = r.email || "غير مسجل";
-                    const password = r.saved_password || "غير محفوظة (حساب قديم)";
-
-                    // فلترة حساب الأدمن
-                    if (email === ADMIN_EMAIL) return;
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.email === ADMIN_EMAIL) return; // إخفاء الأدمن
 
                     count++;
-                    const statusClass = r.status === 'open' ? 'open' : 'closed';
+                    const statusClass = data.status === 'open' ? 'open' : 'closed';
+                    const statusText = data.status === 'open' ? 'مفتوح' : 'مغلق';
+                    const social = data.social || {};
+
+                    // أيقونات الروابط الموجودة
+                    let socialIcons = '';
+                    if(social.whatsapp) socialIcons += '<i class="fab fa-whatsapp" style="color:#25D366; margin-left:5px;"></i>';
+                    if(social.instagram) socialIcons += '<i class="fab fa-instagram" style="color:#E1306C; margin-left:5px;"></i>';
+                    if(social.snapchat) socialIcons += '<i class="fab fa-snapchat" style="color:#FFFC00; margin-left:5px;"></i>';
+                    if(social.tiktok) socialIcons += '<i class="fab fa-tiktok" style="color:#fff; margin-left:5px;"></i>';
 
                     tbody.innerHTML += `
                         <tr>
                             <td>
-                                <div style="font-weight:bold; font-size:1.1rem;">${r.name}</div>
-                                <div style="color:#555; font-size:0.7rem;">ID: ${doc.id}</div>
+                                <div style="font-weight:bold; font-size:1.1rem;">${data.name || 'بدون اسم'}</div>
+                                <div style="color:#888; font-size:0.8rem;">${doc.id}</div>
                             </td>
                             <td>
-                                <div style="margin-bottom:5px;">📧 ${email}</div>
-                                <div>🔑 <span class="pass-badge">${password}</span></div>
+                                <div>${data.email}</div>
+                                <div style="color:#fab1a0; font-family:monospace;">Pass: ${data.saved_password || '---'}</div>
                             </td>
                             <td>
-                                <span class="status-dot ${statusClass}"></span> ${r.status === 'open' ? 'مفتوح' : 'مغلق'}
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                <div style="font-size:0.8rem; margin-top:5px;">${data.ordering_enabled ? '✅ طلبات' : '⛔ عرض'}</div>
                             </td>
+                            <td>${socialIcons || 'لا يوجد'}</td>
                             <td>
-                                <button class="btn btn-reset" onclick="resetPass('${email}')" title="رابط استعادة">
-                                    <i class="fas fa-envelope"></i>
-                                </button>
-                                <button class="btn btn-delete" onclick="nukeAccount('${doc.id}', '${r.name}')" title="حذف">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button class="btn btn-edit" onclick="openEditModal('${doc.id}')"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-delete" onclick="deleteRestaurant('${doc.id}', '${data.name}')"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -269,34 +310,98 @@
             });
         }
 
-        // 3. استعادة كلمة المرور
-        async function resetPass(email) {
-            if(confirm(`إرسال رابط استعادة كلمة المرور إلى ${email}؟`)) {
-                try {
-                    await auth.sendPasswordResetEmail(email);
-                    alert("✅ تم الإرسال!");
-                } catch(err) {
-                    alert("خطأ: " + err.message);
+        // 3. فتح نافذة التعديل
+        async function openEditModal(uid) {
+            const doc = await db.collection('restaurants').doc(uid).get();
+            const data = doc.data();
+            const social = data.social || {};
+
+            document.getElementById('editUid').value = uid;
+            document.getElementById('editName').value = data.name || '';
+            document.getElementById('editCurrency').value = data.currency || '';
+            document.getElementById('editStatus').value = data.status || 'open';
+            document.getElementById('editOrdering').value = data.ordering_enabled ? 'true' : 'false';
+            document.getElementById('editSavedPass').value = data.saved_password || '';
+
+            document.getElementById('editWa').value = social.whatsapp || '';
+            document.getElementById('editInsta').value = social.instagram || '';
+            document.getElementById('editSnap').value = social.snapchat || '';
+            document.getElementById('editTiktok').value = social.tiktok || '';
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // 4. حفظ التعديلات
+        async function saveEdit() {
+            const uid = document.getElementById('editUid').value;
+            
+            const updateData = {
+                name: document.getElementById('editName').value,
+                currency: document.getElementById('editCurrency').value,
+                status: document.getElementById('editStatus').value,
+                ordering_enabled: document.getElementById('editOrdering').value === 'true',
+                saved_password: document.getElementById('editSavedPass').value, // تحديث الباسوورد
+                social: {
+                    whatsapp: document.getElementById('editWa').value,
+                    instagram: document.getElementById('editInsta').value,
+                    snapchat: document.getElementById('editSnap').value,
+                    tiktok: document.getElementById('editTiktok').value
                 }
+            };
+
+            try {
+                await db.collection('restaurants').doc(uid).update(updateData);
+                alert("تم التعديل بنجاح!");
+                closeEditModal();
+            } catch(e) {
+                alert("خطأ: " + e.message);
             }
         }
 
-        // 4. الحذف
-        async function nukeAccount(uid, name) {
-            const code = prompt(`لحذف مطعم "${name}" اكتب "حذف":`);
-            if(code !== "حذف") return;
+        // 5. حذف مطعم بالكامل
+        async function deleteRestaurant(uid, name) {
+            const confirmCode = prompt(`تحذير: سيتم حذف المطعم والمنتجات والأقسام نهائياً!\n\nلحذف "${name}"، اكتب كلمة "حذف":`);
+            if(confirmCode !== "حذف") return;
 
             try {
-                const products = await db.collection('products').where('restaurant_id', '==', uid).get();
                 const batch = db.batch();
-                products.forEach(doc => batch.delete(doc.ref));
                 
+                // حذف المنتجات
+                const prods = await db.collection('products').where('restaurant_id', '==', uid).get();
+                prods.forEach(doc => batch.delete(doc.ref));
+
+                // حذف الأقسام
+                const cats = await db.collection('categories').where('restaurant_id', '==', uid).get();
+                cats.forEach(doc => batch.delete(doc.ref));
+
+                // حذف المطعم
                 batch.delete(db.collection('restaurants').doc(uid));
-                
+
                 await batch.commit();
                 alert("تم الحذف.");
-            } catch(err) {
-                alert("خطأ: " + err.message);
+            } catch(e) {
+                alert("خطأ: " + e.message);
+            }
+        }
+
+        // فلترة الجدول
+        function filterTable(text) {
+            const filter = text.toLowerCase();
+            const rows = document.getElementById("mainTable").getElementsByTagName("tr");
+            for (let i = 1; i < rows.length; i++) {
+                let found = false;
+                const cells = rows[i].getElementsByTagName("td");
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].innerText.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = found ? "" : "none";
             }
         }
     </script>
