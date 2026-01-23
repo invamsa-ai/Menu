@@ -18,6 +18,55 @@
 
     <script src="js/firebase-config.js"></script> 
     <script src="js/app.js"></script>
+
+    <style>
+        /* إضافة ستايل الأيقونات هنا */
+        .social-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background-color: #333; /* لون افتراضي */
+        }
+        .social-icon:hover { transform: translateY(-3px); color: white; }
+
+        /* ألوان المنصات */
+        .wa-icon { background: #25D366; }
+        .in-icon { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .sn-icon { background: #FFFC00; color: #000; text-shadow: none; }
+        .tk-icon { background: #000000; }
+        
+        /* تحسين مظهر البانر */
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            margin-bottom: 1rem;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+    </style>
 </head>
 <body>
 
@@ -26,22 +75,22 @@
         <div id="restaurantStatus" class="status-badge status-open">مفتوح الآن</div>
     </header>
 
-    <div style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&q=80'); background-size: cover; background-position: center; height: 200px; display: flex; align-items: center; justify-content: center; color: white; text-align: center; margin-bottom: 1rem;">
-        <div>
-            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">أهلاً بكم في MenuNow</h1>
-            <p>استمتع بأشهى المأكولات والحلويات</p>
-        </div>
+    <div class="hero-section">
+        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;" id="menuTitle">أهلاً بكم في MenuNow</h1>
+        <p>استمتع بأشهى المأكولات والحلويات</p>
+        
+        <div id="socialContainer" class="social-bar"></div>
     </div>
 
     <div class="categories-container" id="categoriesContainer">
-        </div>
+    </div>
 
     <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
         <input type="text" id="searchInput" placeholder="ابحث عن طبقك المفضل..." style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid #ddd; outline: none; font-family: 'Cairo', sans-serif;">
     </div>
 
     <div class="products-grid" id="productsGrid">
-        </div>
+    </div>
 
     <div class="cart-btn" id="cartBtn" onclick="toggleCart()">
         <i class="fas fa-shopping-basket" style="font-size: 1.5rem;"></i>
@@ -54,7 +103,7 @@
             <i class="fas fa-times" onclick="toggleCart()" style="cursor: pointer; font-size: 1.5rem;"></i>
         </div>
         <div class="cart-items" id="cartItems">
-            </div>
+        </div>
         <div class="cart-footer">
             <div class="total-price">
                 <span>المجموع:</span>
@@ -67,5 +116,59 @@
         </div>
     </div>
 
-    </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // نحاول جلب معرف المطعم من الرابط (مثلاً ?id=xxxxx)
+            const urlParams = new URLSearchParams(window.location.search);
+            const restaurantId = urlParams.get('id');
+
+            if (restaurantId) {
+                try {
+                    const doc = await db.collection('restaurants').doc(restaurantId).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        
+                        // تحديث اسم المطعم
+                        if(data.name) document.getElementById('menuTitle').innerText = data.name;
+
+                        // عرض الأيقونات إذا كانت موجودة
+                        if (data.social) {
+                            displaySocialIcons(data.social);
+                        }
+                    }
+                } catch (error) {
+                    console.log("Error loading restaurant data:", error);
+                }
+            } else {
+                // إذا لم يوجد ID في الرابط (للغرض التجريبي، يمكن جلب أول مطعم أو تركها فارغة)
+                console.log("No restaurant ID provided in URL");
+            }
+        });
+
+        function displaySocialIcons(social) {
+            const container = document.getElementById('socialContainer');
+            let html = '';
+
+            // واتساب
+            if (social.whatsapp && social.whatsapp.trim() !== "") {
+                html += `<a href="https://wa.me/${social.whatsapp}" target="_blank" class="social-icon wa-icon"><i class="fab fa-whatsapp"></i></a>`;
+            }
+            // انستقرام
+            if (social.instagram && social.instagram.trim() !== "") {
+                html += `<a href="${social.instagram}" target="_blank" class="social-icon in-icon"><i class="fab fa-instagram"></i></a>`;
+            }
+            // سناب شات
+            if (social.snapchat && social.snapchat.trim() !== "") {
+                html += `<a href="${social.snapchat}" target="_blank" class="social-icon sn-icon"><i class="fab fa-snapchat-ghost"></i></a>`;
+            }
+            // تيك توك
+            if (social.tiktok && social.tiktok.trim() !== "") {
+                html += `<a href="${social.tiktok}" target="_blank" class="social-icon tk-icon"><i class="fab fa-tiktok"></i></a>`;
+            }
+
+            container.innerHTML = html;
+        }
+    </script>
+
+</body>
 </html>
