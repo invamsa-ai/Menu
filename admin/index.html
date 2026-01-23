@@ -13,7 +13,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -30,7 +31,10 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        .fas, .fab, .far, .fa { font-family: 'Font Awesome 6 Free' !important; font-weight: 900; }
+
+        /* تعديل الأيقونات لتظهر بشكل صحيح */
+        .fas, .fa-solid { font-family: "Font Awesome 6 Free"; font-weight: 900; }
+        .fab, .fa-brands { font-family: "Font Awesome 6 Brands"; font-weight: 400; }
 
         body { background-color: var(--bg); color: var(--text); }
 
@@ -93,9 +97,17 @@
         }
         .social-input-group i {
             position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
-            color: #888; font-size: 1.2rem;
+            font-size: 1.2rem;
+            z-index: 10; /* لضمان ظهور الأيقونة فوق الحقل */
         }
-        .social-input-group input { padding-right: 40px; }
+        
+        /* تلوين الأيقونات داخل حقول الإدخال */
+        .social-input-group .fa-whatsapp { color: #25D366; }
+        .social-input-group .fa-instagram { color: #E1306C; }
+        .social-input-group .fa-snapchat { color: #FFFC00; text-shadow: 0 0 1px #000; } /* لون أصفر مع ظل لتوضيحه */
+        .social-input-group .fa-tiktok { color: #000; }
+
+        .social-input-group input { padding-right: 45px; }
 
         /* تجاوب الجوال */
         @media (max-width: 768px) {
@@ -246,6 +258,7 @@
 
                         <h3 style="color:#666; border-bottom:1px solid #eee; padding-bottom:10px; margin-top:10px;">روابط التواصل الاجتماعي</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">واتساب</label>
                                 <div class="social-input-group">
@@ -253,6 +266,7 @@
                                     <input type="text" id="socialWhatsapp" class="form-control" placeholder="9665xxxxxxxx">
                                 </div>
                             </div>
+
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">انستقرام</label>
                                 <div class="social-input-group">
@@ -260,6 +274,7 @@
                                     <input type="text" id="socialInsta" class="form-control" placeholder="https://instagram.com/...">
                                 </div>
                             </div>
+
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">سناب شات</label>
                                 <div class="social-input-group">
@@ -267,6 +282,7 @@
                                     <input type="text" id="socialSnap" class="form-control" placeholder="https://snapchat.com/...">
                                 </div>
                             </div>
+
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">تيك توك</label>
                                 <div class="social-input-group">
@@ -274,6 +290,7 @@
                                     <input type="text" id="socialTiktok" class="form-control" placeholder="https://tiktok.com/...">
                                 </div>
                             </div>
+
                         </div>
 
                         <div style="background:#e3f2fd; padding:15px; border-radius:10px; border:1px solid #90caf9; margin-top:10px;">
@@ -326,37 +343,28 @@
         });
 
         // ------------------------------------------------------------------
-        // دالة توليد الباركود (QR Code) - تم دمجها هنا
+        // دالة توليد الباركود
         // ------------------------------------------------------------------
         function generateQR() {
             if(!currentUser) return;
             
             const qrContainer = document.getElementById('qrContainer');
-            qrContainer.innerHTML = ''; // تنظيف القديم
+            qrContainer.innerHTML = ''; 
 
-            // حساب رابط المنيو بناءً على الرابط الحالي
-            // نحذف admin/index.html ونستبدلها بـ menu.html
             const path = window.location.pathname;
-            // نفترض أن الهيكل هو /Menu/admin/index.html -> نريد /Menu/menu.html
-            // أو ببساطة العودة مجلد للخلف
-            
-            // طريقة آمنة:
             const adminFolderIndex = path.indexOf('/admin/');
             let rootPath = path;
             
             if (adminFolderIndex !== -1) {
                 rootPath = path.substring(0, adminFolderIndex); 
             } else {
-                // في حالة كان الملف في الجذر مباشرة
                 rootPath = path.substring(0, path.lastIndexOf('/'));
             }
 
-            // إذا كان rootPath فارغاً أو / فقط، نحتاج للتأكد من الشرطات
             if(rootPath === '/') rootPath = '';
 
             const menuLink = `${window.location.origin}${rootPath}/menu.html?id=${currentUser.uid}`;
 
-            // إنشاء الباركود
             new QRCode(qrContainer, {
                 text: menuLink,
                 width: 150,
@@ -366,7 +374,6 @@
                 correctLevel : QRCode.CorrectLevel.H
             });
 
-            // إضافة الرابط كنص للنسخ
             const linkElem = document.createElement('div');
             linkElem.style.marginTop = '10px';
             linkElem.innerHTML = `<a href="${menuLink}" target="_blank" style="color:var(--primary); font-weight:bold; word-break:break-all;">${menuLink}</a>`;
@@ -374,7 +381,7 @@
         }
 
         // ------------------------------------------------------------------
-        // باقي دوال لوحة التحكم
+        // التنقل بين الأقسام
         // ------------------------------------------------------------------
         
         function showSection(sectionId, element) {
@@ -391,6 +398,10 @@
         function logout() {
             auth.signOut().then(() => window.location.href = '../login.html');
         }
+
+        // ------------------------------------------------------------------
+        // حفظ واسترجاع الإعدادات
+        // ------------------------------------------------------------------
 
         async function loadSettings() {
             if (!currentUser) return;
@@ -440,7 +451,6 @@
 
         // دوال المنتجات والأقسام
         async function loadDashboardData() {
-            // يمكن إضافة كود لجلب عدد المنتجات والأقسام هنا
             db.collection('products').where('restaurant_id', '==', currentUser.uid).get().then(snap => {
                 document.getElementById('totalProductsCount').innerText = snap.size;
             });
@@ -501,13 +511,9 @@
             const price = document.getElementById('pPrice').value;
             const catId = document.getElementById('pCategory').value;
             const catName = document.getElementById('pCategory').options[document.getElementById('pCategory').selectedIndex].text;
-            
             const imgFile = document.getElementById('imageFile').files[0];
             let imageUrl = "";
 
-            // في حالة وجود صورة، يجب رفعها للستورج أولاً (هنا تبسيط بدون رفع فعلي)
-            // إذا كنت تريد رفع الصورة، تحتاج تفعيل Firebase Storage وكتابة كود الرفع
-            
             await db.collection('products').add({
                 name, price, category_id: catId, category_name: catName, image: imageUrl,
                 restaurant_id: currentUser.uid, created_at: firebase.firestore.FieldValue.serverTimestamp()
