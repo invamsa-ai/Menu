@@ -11,6 +11,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -181,7 +183,7 @@
                     <h3><i class="fas fa-qrcode"></i> رابط المنيو</h3>
                     <p style="color: #666; margin: 10px 0;">رابط المنيو الخاص بك للزبائن:</p>
                     <button class="btn-primary" onclick="generateQR()" style="width:100%;">عرض الرابط والباركود</button>
-                    <div id="qrContainer" style="margin-top: 1.5rem; text-align: center;"></div>
+                    <div id="qrContainer" style="margin-top: 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;"></div>
                 </div>
             </div>
 
@@ -244,7 +246,6 @@
 
                         <h3 style="color:#666; border-bottom:1px solid #eee; padding-bottom:10px; margin-top:10px;">روابط التواصل الاجتماعي</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                            
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">واتساب</label>
                                 <div class="social-input-group">
@@ -252,7 +253,6 @@
                                     <input type="text" id="socialWhatsapp" class="form-control" placeholder="9665xxxxxxxx">
                                 </div>
                             </div>
-
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">انستقرام</label>
                                 <div class="social-input-group">
@@ -260,7 +260,6 @@
                                     <input type="text" id="socialInsta" class="form-control" placeholder="https://instagram.com/...">
                                 </div>
                             </div>
-
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">سناب شات</label>
                                 <div class="social-input-group">
@@ -268,7 +267,6 @@
                                     <input type="text" id="socialSnap" class="form-control" placeholder="https://snapchat.com/...">
                                 </div>
                             </div>
-
                             <div>
                                 <label style="font-weight:700; display:block; margin-bottom:5px;">تيك توك</label>
                                 <div class="social-input-group">
@@ -276,7 +274,6 @@
                                     <input type="text" id="socialTiktok" class="form-control" placeholder="https://tiktok.com/...">
                                 </div>
                             </div>
-
                         </div>
 
                         <div style="background:#e3f2fd; padding:15px; border-radius:10px; border:1px solid #90caf9; margin-top:10px;">
@@ -313,8 +310,6 @@
         </div>
     </div>
 
-    <script src="../js/admin.js"></script> 
-    
     <script>
         let currentUser = null;
 
@@ -322,37 +317,108 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
-                loadSettings(); // تحميل الإعدادات عند الدخول
+                loadDashboardData();
+                loadSettings(); 
                 document.getElementById('loadingOverlay').style.display = 'none';
             } else {
                 window.location.href = '../login.html';
             }
         });
 
+        // ------------------------------------------------------------------
+        // دالة توليد الباركود (QR Code) - تم دمجها هنا
+        // ------------------------------------------------------------------
+        function generateQR() {
+            if(!currentUser) return;
+            
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = ''; // تنظيف القديم
+
+            // حساب رابط المنيو بناءً على الرابط الحالي
+            // نحذف admin/index.html ونستبدلها بـ menu.html
+            const path = window.location.pathname;
+            // نفترض أن الهيكل هو /Menu/admin/index.html -> نريد /Menu/menu.html
+            // أو ببساطة العودة مجلد للخلف
+            
+            // طريقة آمنة:
+            const adminFolderIndex = path.indexOf('/admin/');
+            let rootPath = path;
+            
+            if (adminFolderIndex !== -1) {
+                rootPath = path.substring(0, adminFolderIndex); 
+            } else {
+                // في حالة كان الملف في الجذر مباشرة
+                rootPath = path.substring(0, path.lastIndexOf('/'));
+            }
+
+            // إذا كان rootPath فارغاً أو / فقط، نحتاج للتأكد من الشرطات
+            if(rootPath === '/') rootPath = '';
+
+            const menuLink = `${window.location.origin}${rootPath}/menu.html?id=${currentUser.uid}`;
+
+            // إنشاء الباركود
+            new QRCode(qrContainer, {
+                text: menuLink,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // إضافة الرابط كنص للنسخ
+            const linkElem = document.createElement('div');
+            linkElem.style.marginTop = '10px';
+            linkElem.innerHTML = `<a href="${menuLink}" target="_blank" style="color:var(--primary); font-weight:bold; word-break:break-all;">${menuLink}</a>`;
+            qrContainer.appendChild(linkElem);
+        }
+
+        // ------------------------------------------------------------------
+        // باقي دوال لوحة التحكم
+        // ------------------------------------------------------------------
+        
         function showSection(sectionId, element) {
             document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if(element) element.classList.add('active');
+
+            if(sectionId === 'products') loadProducts();
+            if(sectionId === 'categories') loadCategories();
         }
 
         function logout() {
             auth.signOut().then(() => window.location.href = '../login.html');
         }
 
-        // ==========================================
-        // 1. دالة حفظ الإعدادات (المحدثة)
-        // ==========================================
-        async function saveSettings() {
+        async function loadSettings() {
             if (!currentUser) return;
+            try {
+                const doc = await db.collection('restaurants').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('restName').value = data.name || '';
+                    document.getElementById('restCurrency').value = data.currency || '';
+                    document.getElementById('restStatus').value = data.status || 'open';
+                    document.getElementById('orderingStatus').value = data.ordering_enabled ? 'true' : 'false';
 
+                    if (data.social) {
+                        document.getElementById('socialWhatsapp').value = data.social.whatsapp || '';
+                        document.getElementById('socialInsta').value = data.social.instagram || '';
+                        document.getElementById('socialSnap').value = data.social.snapchat || '';
+                        document.getElementById('socialTiktok').value = data.social.tiktok || '';
+                    }
+                }
+            } catch (error) { console.error("Error loading settings:", error); }
+        }
+
+        async function saveSettings() {
             const name = document.getElementById('restName').value;
             const currency = document.getElementById('restCurrency').value;
             const status = document.getElementById('restStatus').value;
-            const ordering = document.getElementById('orderingStatus').value === 'true'; // تحويل لنص بوليان
-
-            // بيانات التواصل الاجتماعي
+            const ordering = document.getElementById('orderingStatus').value === 'true';
+            
             const social = {
                 whatsapp: document.getElementById('socialWhatsapp').value,
                 instagram: document.getElementById('socialInsta').value,
@@ -361,55 +427,99 @@
             };
 
             const btn = document.querySelector('#settings .btn-primary');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'جاري الحفظ...';
-            btn.disabled = true;
+            btn.innerHTML = 'جاري الحفظ...'; btn.disabled = true;
 
             try {
                 await db.collection('restaurants').doc(currentUser.uid).update({
-                    name: name,
-                    currency: currency,
-                    status: status,
-                    ordering_enabled: ordering,
-                    social: social // حفظ كائن الروابط
+                    name, currency, status, ordering_enabled: ordering, social
                 });
-                alert('✅ تم حفظ الإعدادات بنجاح!');
-            } catch (error) {
-                console.error("Error saving settings:", error);
-                alert('حدث خطأ أثناء الحفظ.');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+                alert('✅ تم الحفظ!');
+            } catch (e) { alert('خطأ في الحفظ'); }
+            finally { btn.innerHTML = '<i class="fas fa-save"></i> حفظ التغييرات'; btn.disabled = false; }
         }
 
-        // ==========================================
-        // 2. دالة تحميل الإعدادات (المحدثة)
-        // ==========================================
-        async function loadSettings() {
-            if (!currentUser) return;
+        // دوال المنتجات والأقسام
+        async function loadDashboardData() {
+            // يمكن إضافة كود لجلب عدد المنتجات والأقسام هنا
+            db.collection('products').where('restaurant_id', '==', currentUser.uid).get().then(snap => {
+                document.getElementById('totalProductsCount').innerText = snap.size;
+            });
+            db.collection('categories').where('restaurant_id', '==', currentUser.uid).get().then(snap => {
+                document.getElementById('totalCategoriesCount').innerText = snap.size;
+            });
+        }
 
-            try {
-                const doc = await db.collection('restaurants').doc(currentUser.uid).get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    
-                    // تعبئة البيانات الأساسية
-                    document.getElementById('restName').value = data.name || '';
-                    document.getElementById('restCurrency').value = data.currency || '';
-                    document.getElementById('restStatus').value = data.status || 'open';
-                    document.getElementById('orderingStatus').value = data.ordering_enabled ? 'true' : 'false';
+        async function addCategory() {
+            const name = document.getElementById('newCatName').value;
+            if(!name) return;
+            await db.collection('categories').add({
+                name, restaurant_id: currentUser.uid, created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('newCatName').value = '';
+            loadCategories();
+        }
 
-                    // تعبئة روابط التواصل (إذا وجدت)
-                    if (data.social) {
-                        document.getElementById('socialWhatsapp').value = data.social.whatsapp || '';
-                        document.getElementById('socialInsta').value = data.social.instagram || '';
-                        document.getElementById('socialSnap').value = data.social.snapchat || '';
-                        document.getElementById('socialTiktok').value = data.social.tiktok || '';
-                    }
-                }
-            } catch (error) {
-                console.error("Error loading settings:", error);
+        function loadCategories() {
+            db.collection('categories').where('restaurant_id', '==', currentUser.uid).onSnapshot(snapshot => {
+                const list = document.getElementById('adminCategoriesList');
+                const pCat = document.getElementById('pCategory');
+                list.innerHTML = ''; pCat.innerHTML = '<option value="">اختر القسم</option>';
+                
+                snapshot.forEach(doc => {
+                    const c = doc.data();
+                    list.innerHTML += `<div style="background:#fff; padding:10px; border:1px solid #ddd; border-radius:8px; display:flex; justify-content:space-between;">
+                        <span>${c.name}</span>
+                        <i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteDoc('categories', '${doc.id}')"></i>
+                    </div>`;
+                    pCat.innerHTML += `<option value="${doc.id}">${c.name}</option>`;
+                });
+                document.getElementById('totalCategoriesCount').innerText = snapshot.size;
+            });
+        }
+
+        function loadProducts() {
+            db.collection('products').where('restaurant_id', '==', currentUser.uid).onSnapshot(snapshot => {
+                const tbody = document.getElementById('adminProductsTable');
+                tbody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    tbody.innerHTML += `<tr>
+                        <td><img src="${p.image || 'https://via.placeholder.com/50'}" width="50" style="border-radius:5px"></td>
+                        <td>${p.name}</td>
+                        <td>${p.category_name || '-'}</td>
+                        <td>${p.price}</td>
+                        <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteDoc('products', '${doc.id}')"></i></td>
+                    </tr>`;
+                });
+                document.getElementById('totalProductsCount').innerText = snapshot.size;
+            });
+        }
+
+        async function addProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const catId = document.getElementById('pCategory').value;
+            const catName = document.getElementById('pCategory').options[document.getElementById('pCategory').selectedIndex].text;
+            
+            const imgFile = document.getElementById('imageFile').files[0];
+            let imageUrl = "";
+
+            // في حالة وجود صورة، يجب رفعها للستورج أولاً (هنا تبسيط بدون رفع فعلي)
+            // إذا كنت تريد رفع الصورة، تحتاج تفعيل Firebase Storage وكتابة كود الرفع
+            
+            await db.collection('products').add({
+                name, price, category_id: catId, category_name: catName, image: imageUrl,
+                restaurant_id: currentUser.uid, created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            document.getElementById('addProductModal').style.display='none';
+            e.target.reset();
+        }
+
+        async function deleteDoc(coll, id) {
+            if(confirm('هل أنت متأكد؟')) {
+                await db.collection(coll).doc(id).delete();
             }
         }
     </script>
