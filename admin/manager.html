@@ -35,7 +35,7 @@
             padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer;
             font-family: 'Cairo', sans-serif; font-weight: bold; transition: 0.2s;
         }
-        .btn-create { background: #2ed573; color: #fff; width: 100%; padding: 12px; font-size: 1.1rem; }
+        .btn-create { background: #2ed573; color: #fff; width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 15px; }
         .btn-delete { background: #ff4757; color: white; }
         .btn-reset { background: #ffa502; color: white; }
         
@@ -45,14 +45,28 @@
 
         .add-box {
             background: #2f3542; padding: 20px; border-radius: 10px; border: 1px solid #444;
-            display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
         }
+
+        /* تنسيق الحقول */
+        .input-group { margin-bottom: 10px; }
+        .input-label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
+        
         input {
             background: #444; border: 1px solid #555; color: white; padding: 10px;
             border-radius: 5px; font-family: 'Cairo'; width: 100%; box-sizing: border-box;
         }
+
+        /* شبكة لإدخال البيانات الأساسية */
+        .credentials-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
+        }
+
+        /* شبكة لإدخال الروابط */
+        .social-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            border-top: 1px solid #444; padding-top: 15px;
+        }
         
-        /* تنسيق خاص لكلمة المرور */
         .pass-badge {
             background: #444; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #fab1a0;
         }
@@ -74,16 +88,39 @@
         <div class="card">
             <h3><i class="fas fa-user-plus"></i> إنشاء مطعم جديد</h3>
             <div class="add-box">
-                <div>
-                    <label style="display:block; margin-bottom:5px;">البريد الإلكتروني</label>
-                    <input type="email" id="newEmail" placeholder="user@restaurant.com">
+                
+                <div class="credentials-grid">
+                    <div>
+                        <label class="input-label">البريد الإلكتروني</label>
+                        <input type="email" id="newEmail" placeholder="user@restaurant.com">
+                    </div>
+                    <div>
+                        <label class="input-label">كلمة المرور</label>
+                        <input type="text" id="newPass" placeholder="******">
+                    </div>
                 </div>
-                <div>
-                    <label style="display:block; margin-bottom:5px;">كلمة المرور</label>
-                    <input type="text" id="newPass" placeholder="******">
+
+                <div class="social-grid">
+                    <div>
+                        <label class="input-label"><i class="fab fa-whatsapp"></i> رقم الواتساب (مع مفتاح الدولة)</label>
+                        <input type="text" id="waNumber" placeholder="9665xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="input-label"><i class="fab fa-instagram"></i> رابط انستقرام</label>
+                        <input type="text" id="instaLink" placeholder="https://instagram.com/...">
+                    </div>
+                    <div>
+                        <label class="input-label"><i class="fab fa-snapchat"></i> رابط سناب شات</label>
+                        <input type="text" id="snapLink" placeholder="https://snapchat.com/...">
+                    </div>
+                    <div>
+                        <label class="input-label"><i class="fab fa-tiktok"></i> رابط تيك توك</label>
+                        <input type="text" id="tiktokLink" placeholder="https://tiktok.com/...">
+                    </div>
                 </div>
+
                 <button onclick="createAccount()" class="btn btn-create">
-                    <i class="fas fa-bolt"></i> حفظ وإنشاء
+                    <i class="fas fa-bolt"></i> حفظ وإنشاء الحساب
                 </button>
             </div>
         </div>
@@ -123,13 +160,20 @@
             }
         });
 
-        // 1. إنشاء حساب (مع حفظ كلمة المرور في قاعدة البيانات)
+        // 1. إنشاء حساب (مع حفظ كلمة المرور والروابط)
         async function createAccount() {
             const email = document.getElementById('newEmail').value;
             const pass = document.getElementById('newPass').value;
+            
+            // جلب قيم التواصل الاجتماعي
+            const whatsapp = document.getElementById('waNumber').value;
+            const instagram = document.getElementById('instaLink').value;
+            const snapchat = document.getElementById('snapLink').value;
+            const tiktok = document.getElementById('tiktokLink').value;
+
             const btn = document.querySelector('.btn-create');
 
-            if(!email || !pass) return alert("أدخل البيانات!");
+            if(!email || !pass) return alert("أدخل البريد وكلمة المرور!");
 
             btn.innerText = "جاري الحفظ...";
             
@@ -141,27 +185,40 @@
                 const userCred = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
                 const uid = userCred.user.uid;
 
-                // حفظ البيانات + كلمة المرور في Firestore
+                // حفظ البيانات + كلمة المرور + الروابط في Firestore
                 await db.collection('restaurants').doc(uid).set({
                     owner_id: uid,
                     email: email,
-                    saved_password: pass, // ⚠️ هنا يتم حفظ كلمة المرور لتراها لاحقاً
+                    saved_password: pass, 
                     name: "مطعم جديد",
                     status: "open",
-                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    // إضافة كائن الروابط هنا
+                    social: {
+                        whatsapp: whatsapp || "",
+                        instagram: instagram || "",
+                        snapchat: snapchat || "",
+                        tiktok: tiktok || ""
+                    }
                 });
 
                 secondaryAuth.signOut();
                 secondaryApp.delete();
 
-                alert(`✅ تم إنشاء الحساب وحفظ كلمة المرور!`);
+                alert(`✅ تم إنشاء الحساب وحفظ البيانات بنجاح!`);
+                
+                // تفريغ الحقول
                 document.getElementById('newEmail').value = '';
                 document.getElementById('newPass').value = '';
+                document.getElementById('waNumber').value = '';
+                document.getElementById('instaLink').value = '';
+                document.getElementById('snapLink').value = '';
+                document.getElementById('tiktokLink').value = '';
 
             } catch (err) {
                 alert("خطأ: " + err.message);
             } finally {
-                btn.innerHTML = '<i class="fas fa-bolt"></i> حفظ وإنشاء';
+                btn.innerHTML = '<i class="fas fa-bolt"></i> حفظ وإنشاء الحساب';
             }
         }
 
@@ -175,7 +232,6 @@
                 snapshot.forEach(doc => {
                     const r = doc.data();
                     const email = r.email || "غير مسجل";
-                    // جلب كلمة المرور المحفوظة (إن وجدت)
                     const password = r.saved_password || "غير محفوظة (حساب قديم)";
 
                     // فلترة حساب الأدمن
