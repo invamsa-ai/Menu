@@ -1,6 +1,15 @@
 /* 1. استيراد خط Cairo من جوجل */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
-
+/* تنسيق حقول التواصل الاجتماعي */
+.social-grid {
+    grid-column: 1 / -1; /* يأخذ كامل العرض */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+}
 :root {
     --primary-color: #FF6B00; /* برتقالي جذاب */
     --secondary-color: #FFFFFF; /* أبيض */
