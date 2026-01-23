@@ -4,95 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MenuNow - المنيو الإلكتروني</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <script src="js/firebase-config.js"></script> 
-    <script src="js/app.js"></script>
 
     <style>
-        /* إضافة ستايل الأيقونات هنا لضمان عملها */
+        :root {
+            --primary-color: #FF6B00;
+            --secondary-color: #333;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 80px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .status-open { background: #e8f5e9; color: #2e7d32; }
+        .status-closed { background: #ffebee; color: #c62828; }
+
         .hero-section {
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000&q=80');
-            background-size: cover;
-            background-position: center;
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            margin-bottom: 1rem;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
+            background-size: cover; background-position: center;
+            padding: 40px 20px; text-align: center; color: white;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; margin-bottom: 1rem;
         }
 
-        .social-bar {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
+        .social-bar { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
         .social-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            font-size: 1.2rem;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            background-color: #333; /* لون احتياطي */
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; text-decoration: none; font-size: 1.2rem; transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); background-color: #333;
         }
-        .social-icon:hover { transform: translateY(-3px); color: white; }
+        .social-icon:hover { transform: translateY(-3px); }
+        .wa-icon { background: #25D366; } .in-icon { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .sn-icon { background: #FFFC00; color: #000; } .tk-icon { background: #000000; }
 
-        /* ألوان المنصات */
-        .wa-icon { background: #25D366; }
-        .in-icon { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .sn-icon { background: #FFFC00; color: #000; text-shadow: none; }
-        .tk-icon { background: #000000; }
+        .categories-container { 
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 1.5rem 1rem; 
+            scrollbar-width: none; -ms-overflow-style: none; 
+        }
+        .categories-container::-webkit-scrollbar { display: none; }
+        .category-chip {
+            padding: 8px 16px; background: white; border-radius: 20px; border: 1px solid #eee;
+            white-space: nowrap; cursor: pointer; transition: 0.3s;
+        }
+        .category-chip.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 0 1.5rem; }
+        .product-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding-bottom: 10px; }
+        .product-img { width: 100%; height: 150px; object-fit: cover; }
+        .product-info { padding: 10px; }
+        .product-name { font-weight: 700; margin-bottom: 5px; font-size: 1rem; }
+        .product-price { color: var(--primary-color); font-weight: 800; font-size: 1.1rem; }
+        .add-to-cart {
+            width: 90%; margin: 0 auto; display: block; padding: 8px; border: none;
+            background: var(--secondary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+
+        .cart-btn {
+            position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px;
+            background: var(--primary-color); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 20px rgba(255, 107, 0, 0.4); cursor: pointer; z-index: 1000;
+        }
+        .cart-count {
+            position: absolute; top: -5px; right: -5px; background: red; color: white;
+            width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;
+        }
+
+        .cart-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white;
+            z-index: 2000; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+        .cart-modal.active { transform: translateY(0); }
+        .cart-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 1.5rem; }
+        .cart-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f5f5f5; }
+        .cart-footer { padding: 1.5rem; border-top: 1px solid #eee; background: #fff; }
+        .total-price { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem; margin-bottom: 15px; }
+        .checkout-btn {
+            width: 100%; padding: 15px; background: #25D366; color: white; border: none;
+            border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo">MenuNow</div>
-        <div id="restaurantStatus" class="status-badge status-open">مفتوح الآن</div>
+        <div id="restaurantStatus" class="status-badge status-open">...</div>
     </header>
 
     <div class="hero-section">
         <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;" id="menuTitle">أهلاً بكم في MenuNow</h1>
         <p>استمتع بأشهى المأكولات والحلويات</p>
-        
         <div id="socialContainer" class="social-bar"></div>
     </div>
 
     <div class="categories-container" id="categoriesContainer">
+        <div class="category-chip active" onclick="filterProducts('all')">الكل</div>
     </div>
 
     <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
-        <input type="text" id="searchInput" placeholder="ابحث عن طبقك المفضل..." style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid #ddd; outline: none; font-family: 'Cairo', sans-serif;">
+        <input type="text" id="searchInput" placeholder="ابحث عن طبقك المفضل..." onkeyup="searchProducts()" style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid #ddd; outline: none;">
     </div>
 
     <div class="products-grid" id="productsGrid">
+        <p style="text-align:center; width:100%; grid-column:1/-1;">جاري التحميل...</p>
     </div>
 
-    <div class="cart-btn" id="cartBtn" onclick="toggleCart()">
+    <div class="cart-btn" onclick="toggleCart()">
         <i class="fas fa-shopping-basket" style="font-size: 1.5rem;"></i>
         <div class="cart-count" id="cartCount">0</div>
     </div>
@@ -102,70 +141,200 @@
             <h2 style="color: var(--primary-color);">سلة التسوق</h2>
             <i class="fas fa-times" onclick="toggleCart()" style="cursor: pointer; font-size: 1.5rem;"></i>
         </div>
-        <div class="cart-items" id="cartItems">
-        </div>
+        <div class="cart-items" id="cartItems"></div>
         <div class="cart-footer">
             <div class="total-price">
                 <span>المجموع:</span>
                 <span id="totalPrice">0 ر.س</span>
             </div>
             <button class="checkout-btn" onclick="sendOrder()">
-                <i class="fab fa-whatsapp"></i>
-                إرسال الطلب عبر واتساب
+                <i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب
             </button>
         </div>
     </div>
 
     <script>
+        let cart = [];
+        let allProducts = [];
+        let restaurantPhone = "";
+        let restaurantName = "MenuNow";
+        let restaurantCurrency = "ر.س";
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // نحاول جلب معرف المطعم من الرابط (مثلاً ?id=xxxxx)
             const urlParams = new URLSearchParams(window.location.search);
             const restaurantId = urlParams.get('id');
 
-            if (restaurantId) {
-                try {
-                    const doc = await db.collection('restaurants').doc(restaurantId).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        
-                        // تحديث اسم المطعم في البانر
-                        if(data.name) document.getElementById('menuTitle').innerText = data.name;
+            if (!restaurantId) {
+                document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;">رابط غير صالح (لا يوجد معرف مطعم)</p>';
+                return;
+            }
 
-                        // عرض الأيقونات إذا كانت موجودة
-                        if (data.social) {
-                            displaySocialIcons(data.social);
-                        }
+            try {
+                // 1. جلب بيانات المطعم
+                const doc = await db.collection('restaurants').doc(restaurantId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    restaurantName = data.name || "MenuNow";
+                    restaurantCurrency = data.currency || "ر.س";
+                    
+                    document.getElementById('menuTitle').innerText = `أهلاً بكم في ${restaurantName}`;
+                    
+                    // الحالة (مفتوح/مغلق)
+                    const statusEl = document.getElementById('restaurantStatus');
+                    if(data.status === 'closed') {
+                        statusEl.innerText = "مغلق حالياً";
+                        statusEl.className = "status-badge status-closed";
+                    } else {
+                        statusEl.innerText = "مفتوح الآن";
+                        statusEl.className = "status-badge status-open";
                     }
-                } catch (error) {
-                    console.log("Error loading restaurant data:", error);
+
+                    // رقم الواتساب للطلبات
+                    if(data.social && data.social.whatsapp) {
+                        restaurantPhone = data.social.whatsapp;
+                    }
+
+                    // عرض أيقونات التواصل
+                    if (data.social) displaySocialIcons(data.social);
                 }
-            } else {
-                console.log("No restaurant ID provided in URL");
+
+                // 2. جلب الأقسام
+                const catsSnap = await db.collection('categories').where('restaurant_id', '==', restaurantId).get();
+                const catContainer = document.getElementById('categoriesContainer');
+                catsSnap.forEach(doc => {
+                    catContainer.innerHTML += `<div class="category-chip" onclick="filterProducts('${doc.id}', this)">${doc.data().name}</div>`;
+                });
+
+                // 3. جلب المنتجات
+                const prodSnap = await db.collection('products').where('restaurant_id', '==', restaurantId).get();
+                const grid = document.getElementById('productsGrid');
+                grid.innerHTML = '';
+                
+                prodSnap.forEach(doc => {
+                    const p = doc.data();
+                    p.id = doc.id; // حفظ الـ ID
+                    allProducts.push(p);
+                });
+
+                renderProducts(allProducts);
+
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;">حدث خطأ في تحميل البيانات</p>';
             }
         });
 
         function displaySocialIcons(social) {
             const container = document.getElementById('socialContainer');
             let html = '';
-
-            // واتساب
-            if (social.whatsapp && social.whatsapp.trim() !== "") {
-                html += `<a href="https://wa.me/${social.whatsapp}" target="_blank" class="social-icon wa-icon"><i class="fab fa-whatsapp"></i></a>`;
-            }
-            // انستقرام
-            if (social.instagram && social.instagram.trim() !== "") {
-                html += `<a href="${social.instagram}" target="_blank" class="social-icon in-icon"><i class="fab fa-instagram"></i></a>`;
-            }
-            // سناب شات
-            if (social.snapchat && social.snapchat.trim() !== "") {
-                html += `<a href="${social.snapchat}" target="_blank" class="social-icon sn-icon"><i class="fab fa-snapchat-ghost"></i></a>`;
-            }
-            // تيك توك
-            if (social.tiktok && social.tiktok.trim() !== "") {
-                html += `<a href="${social.tiktok}" target="_blank" class="social-icon tk-icon"><i class="fab fa-tiktok"></i></a>`;
-            }
-
+            if (social.whatsapp) html += `<a href="https://wa.me/${social.whatsapp}" target="_blank" class="social-icon wa-icon"><i class="fab fa-whatsapp"></i></a>`;
+            if (social.instagram) html += `<a href="${social.instagram}" target="_blank" class="social-icon in-icon"><i class="fab fa-instagram"></i></a>`;
+            if (social.snapchat) html += `<a href="${social.snapchat}" target="_blank" class="social-icon sn-icon"><i class="fab fa-snapchat-ghost"></i></a>`;
+            if (social.tiktok) html += `<a href="${social.tiktok}" target="_blank" class="social-icon tk-icon"><i class="fab fa-tiktok"></i></a>`;
             container.innerHTML = html;
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.image || 'https://via.placeholder.com/150'}" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${p.price} ${restaurantCurrency}</div>
+                        <button class="add-to-cart" onclick="addToCart('${p.id}')">أضف للسلة</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts(catId, element) {
+            // تحديث ستايل الأقسام
+            if(element) {
+                document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                element.classList.add('active');
+            }
+
+            if(catId === 'all') renderProducts(allProducts);
+            else {
+                const filtered = allProducts.filter(p => p.category_id === catId);
+                renderProducts(filtered);
+            }
+        }
+
+        function searchProducts() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term));
+            renderProducts(filtered);
+        }
+
+        function addToCart(prodId) {
+            const product = allProducts.find(p => p.id === prodId);
+            const existing = cart.find(item => item.id === prodId);
+            
+            if(existing) existing.qty++;
+            else cart.push({...product, qty: 1});
+            
+            updateCartUI();
+            
+            // اهتزاز زر السلة كتأثير بصري
+            const btn = document.getElementById('cartBtn');
+            btn.style.transform = "scale(1.1)";
+            setTimeout(() => btn.style.transform = "scale(1)", 200);
+        }
+
+        function updateCartUI() {
+            document.getElementById('cartCount').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            
+            const itemsContainer = document.getElementById('cartItems');
+            let total = 0;
+            
+            itemsContainer.innerHTML = cart.map((item, index) => {
+                total += item.price * item.qty;
+                return `
+                    <div class="cart-item">
+                        <div>
+                            <div style="font-weight:bold;">${item.name}</div>
+                            <div style="color:gray; font-size:0.9rem;">${item.price} ${restaurantCurrency} × ${item.qty}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button onclick="changeQty(${index}, 1)" style="padding:5px 10px; border:1px solid #ddd; background:white; border-radius:5px;">+</button>
+                            <span>${item.qty}</span>
+                            <button onclick="changeQty(${index}, -1)" style="padding:5px 10px; border:1px solid #ddd; background:white; border-radius:5px;">-</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('totalPrice').innerText = total + " " + restaurantCurrency;
+        }
+
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if(cart[index].qty <= 0) cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            document.getElementById('cartModal').classList.toggle('active');
+        }
+
+        function sendOrder() {
+            if(cart.length === 0) return alert("السلة فارغة!");
+            if(!restaurantPhone) return alert("عذراً، صاحب المطعم لم يقم بإعداد رقم الواتساب.");
+
+            let msg = `مرحباً، أود طلب التالي من *${restaurantName}*:\n\n`;
+            let total = 0;
+            
+            cart.forEach(item => {
+                msg += `▫️ ${item.name} (${item.qty}x) - ${item.price * item.qty} ${restaurantCurrency}\n`;
+                total += item.price * item.qty;
+            });
+            
+            msg += `\n*الإجمالي: ${total} ${restaurantCurrency}*`;
+            
+            const url = `https://wa.me/${restaurantPhone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
         }
     </script>
 
